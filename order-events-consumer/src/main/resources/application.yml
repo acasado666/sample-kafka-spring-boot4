@@ -1,0 +1,65 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: library-events-consumer
+
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/mydatabase
+#    username: myuser
+##    password: secret
+#  jpa:
+#    hibernate:
+#      ddl-auto: none
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#  flyway:
+#    enabled: true
+#    locations: classpath:db/migration
+#    baseline-on-migrate: true
+
+    datasource:
+      url: jdbc:h2:mem:testdb
+      driverClassName: org.h2.Driver
+      username: sa
+      password: ''
+    h2:
+      console:
+        enabled: true
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: library-events-listener-group
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      auto-offset-reset: latest
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.IntegerDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.learnkafka.dto,com.learnkafka.domain
+        spring.json.value.default.type: com.learnkafka.dto.LibraryEventDto
+        spring.json.type.mapping: com.learnjava.domain.LibraryEvent:com.learnkafka.dto.LibraryEventDto
+
+retry:
+  scheduler:
+    fixed-rate: 10000   # ms — how often to retry OPEN failure records
+
+app:
+  kafka:
+    recovery:
+      mode: failure-table # options: failure-table | dlt | both
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

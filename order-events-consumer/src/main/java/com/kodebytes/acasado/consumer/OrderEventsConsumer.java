@@ -1,0 +1,40 @@
+package com.kodebytes.acasado.consumer;
+
+import com.learnkafka.dto.LibraryEventDto;
+import com.learnkafka.service.LibraryEventService;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Component;
+
+@Component
+public class LibraryEventsConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(LibraryEventsConsumer.class);
+
+    private final LibraryEventService libraryEventService;
+
+    public LibraryEventsConsumer(LibraryEventService libraryEventService) {
+        this.libraryEventService = libraryEventService;
+    }
+
+    // Default BATCH ack mode — no Acknowledgment parameter needed
+    // @KafkaListener(topics = "library-events")
+    // public void onMessage(ConsumerRecord<Integer, LibraryEventDto> consumerRecord) {
+    //     log.info("ConsumerRecord : {}", consumerRecord);
+    //     libraryEventService.processEvent(consumerRecord);
+    // }
+
+    @KafkaListener(topics = "library-events")
+    public void onMessage(ConsumerRecord<Integer, LibraryEventDto> consumerRecord,
+                          Acknowledgment acknowledgment) {
+        log.info("ConsumerRecord : {}", consumerRecord);
+        libraryEventService.processEvent(consumerRecord);
+        // Only acknowledge on success — on exception, DefaultErrorHandler takes over:
+        // it retries with FixedBackOff, then persists to failure_record table on exhaustion.
+        acknowledgment.acknowledge();
+    }
+}
+
