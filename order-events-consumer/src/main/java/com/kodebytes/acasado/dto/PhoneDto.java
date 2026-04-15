@@ -1,9 +1,9 @@
-package com.kodebytes.acasado.domain;
+package com.kodebytes.acasado.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record Phone(
+public record PhoneDto(
         @NotNull(message = "phoneId is required")
         Long phoneId,
 

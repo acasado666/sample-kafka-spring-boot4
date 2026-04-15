@@ -1,10 +1,10 @@
-package com.learnkafka.service;
+package com.kodebytes.acasado.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.learnkafka.domain.FailureRecord;
-import com.learnkafka.dto.LibraryEventDto;
-import com.learnkafka.repository.FailureRecordRepository;
+import com.kodebytes.acasado.domain.FailureRecord;
+import com.kodebytes.acasado.dto.OrderEventDto;
+import com.kodebytes.acasado.repository.FailureRecordRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +21,18 @@ public class FailureRecordService {
     public static final String FIXED = "FIXED";
 
     private final FailureRecordRepository failureRecordRepository;
-    private final LibraryEventService libraryEventService;
+    private final OrderEventService orderEventService;
     private final ObjectMapper objectMapper;
 
     public FailureRecordService(FailureRecordRepository failureRecordRepository,
-                                LibraryEventService libraryEventService,
+                                OrderEventService orderEventService,
                                 ObjectMapper objectMapper) {
         this.failureRecordRepository = failureRecordRepository;
-        this.libraryEventService = libraryEventService;
+        this.orderEventService = orderEventService;
         this.objectMapper = objectMapper;
     }
 
-    public void saveFailureRecord(ConsumerRecord<Integer, LibraryEventDto> record, Exception exception) {
+    public void saveFailureRecord(ConsumerRecord<Integer, OrderEventDto> record, Exception exception) {
         String serializedValue;
         try {
             serializedValue = objectMapper.writeValueAsString(record.value());
@@ -60,19 +60,20 @@ public class FailureRecordService {
 
         openRecords.forEach(failureRecord -> {
             try {
-                LibraryEventDto libraryEventDto = objectMapper.readValue(
-                        failureRecord.getErrorRecord(), LibraryEventDto.class);
-
-                ConsumerRecord<Integer, LibraryEventDto> consumerRecord =
+                OrderEventDto orderEventDto = objectMapper.readValue(
+                        failureRecord.getErrorRecord(), OrderEventDto.class);
+                // TODO: consider adding headers or other metadata from failureRecord if needed
+                // TODO: could be Long not Integer
+                ConsumerRecord<Integer, OrderEventDto> consumerRecord =
                         new ConsumerRecord<>(
                                 failureRecord.getTopic(),
                                 failureRecord.getPartition(),
                                 failureRecord.getOffsetValue(),
                                 failureRecord.getKeyValue(),
-                                libraryEventDto
+                                orderEventDto
                         );
 
-                libraryEventService.processEvent(consumerRecord);
+                orderEventService.processEvent(consumerRecord);
 
                 failureRecord.setStatus(FIXED);
                 failureRecordRepository.save(failureRecord);

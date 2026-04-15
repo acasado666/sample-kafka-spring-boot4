@@ -1,4 +1,14 @@
 package com.kodebytes.acasado.dto;
 
-public record OrderEventResponseDto() {
+import jakarta.validation.constraints.NotNull;
+
+import java.time.Instant;
+
+public record OrderEventResponseDto(
+        Long orderId,
+        OrderEventType eventType,
+        PhoneResponseDto phone,
+        Instant createdAt,
+        Instant updatedAt
+) {
 }

@@ -1,4 +1,4 @@
-package com.learnjava.config;
+package com.kodebytes.acasado.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -9,18 +9,17 @@ import org.springframework.context.annotation.Configuration;
  * Application-level producer configuration.
  *
  * <p>Explicitly defines an {@link ObjectMapper} bean so it is available
- * for injection into {@code LibraryEventProducer} (StringSerializer mode)
- * regardless of which web-starter variant is on the classpath.
+ * for injection into {@code OrderEventProducer} (StringSerializer mode).
  */
 @Configuration
-public class LibraryEventsProducerConfig {
+public class OrderEventsProducerConfig {
 
     /**
-     * Shared {@link ObjectMapper} used by the Kafka producer to manually
-     * serialize {@code LibraryEvent} to a JSON string (StringSerializer mode).
+     * Bean {@link ObjectMapper} used by the Kafka OrderEventProducer to manually
+     * serialize {@code OrderEvent} to a JSON string (StringSerializer mode).
      *
      * <ul>
-     *   <li>{@code WRITE_DATES_AS_TIMESTAMPS} disabled — ISO-8601 date strings instead of epoch numbers.</li>
+     *   <li>{@code WRITE_DATES_AS_TIMESTAMPS} disabled — ISO-8601 date as readable strings.</li>
      *   <li>{@code FAIL_ON_EMPTY_BEANS} disabled — safe default for records/POJOs.</li>
      * </ul>
      */

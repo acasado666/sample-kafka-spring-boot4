@@ -1,6 +1,6 @@
-package com.learnkafka.repository;
+package com.kodebytes.acasado.repository;
 
-import com.learnkafka.domain.FailureRecord;
+import com.kodebytes.acasado.domain.FailureRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

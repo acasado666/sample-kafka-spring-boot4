@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: order-events-producer
+  profiles:
+    active: dev          # override via -Dspring.profiles.active=stage|prod at runtime
+  kafka:
+    # bootstrap-servers and topic are set per-profile (see application-{dev|stage|prod}.yml)
+    producer:
+      acks: all
+      retries: 10
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # value-serializer: org.apache.kafka.common.serialization.StringSerializer  # switch to this for StringSerializer testing
+      properties:
+        retry.backoff.ms: 1000
+
+app:
+  api:
+    base-path: /api/orderevent
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

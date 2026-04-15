@@ -1,5 +1,7 @@
 package com.kodebytes.acasado.config;
 
+import com.kodebytes.acasado.dto.OrderEventDto;
+import com.kodebytes.acasado.service.FailureRecordService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
@@ -27,15 +29,15 @@ import java.util.Map;
 
 @Configuration
 @EnableKafka
-public class LibraryEventsConsumerConfig {
+public class OrderEventsConsumerConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(LibraryEventsConsumerConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderEventsConsumerConfig.class);
 
     private final FailureRecordService failureRecordService;
     private final String recoveryMode;
     private final String bootstrapServers;
 
-    public LibraryEventsConsumerConfig(
+    public OrderEventsConsumerConfig(
             FailureRecordService failureRecordService,
             @Value("${app.kafka.recovery.mode:failure-table}") String recoveryMode,
             @Value("${spring.kafka.consumer.bootstrap-servers:localhost:9092}") String bootstrapServers) {
@@ -134,11 +136,11 @@ public class LibraryEventsConsumerConfig {
     // ── Container Factory ────────────────────────────────────────────────────
 
     @Bean
-    KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<Integer, LibraryEventDto>> kafkaListenerContainerFactory(
-            ConsumerFactory<Integer, LibraryEventDto> consumerFactory,
+    KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<Integer, OrderEventDto>> kafkaListenerContainerFactory(
+            ConsumerFactory<Integer, OrderEventDto> consumerFactory,
             DefaultErrorHandler errorHandler) {
 
-        var factory = new ConcurrentKafkaListenerContainerFactory<Integer, LibraryEventDto>();
+        var factory = new ConcurrentKafkaListenerContainerFactory<Integer, OrderEventDto>();
         factory.setConsumerFactory(consumerFactory);
 
         // Default: AckMode.BATCH — offsets committed after all records from poll() are processed
@@ -159,7 +161,7 @@ public class LibraryEventsConsumerConfig {
 
         //noinspection unchecked
         failureRecordService.saveFailureRecord(
-                (ConsumerRecord<Integer, LibraryEventDto>) record,
+                (ConsumerRecord<Integer, OrderEventDto>) record,
                 exception
         );
     }

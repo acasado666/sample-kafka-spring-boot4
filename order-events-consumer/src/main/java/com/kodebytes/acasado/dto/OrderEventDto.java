@@ -1,17 +1,17 @@
-package com.kodebytes.acasado.domain;
+package com.kodebytes.acasado.dto;
 
+import com.kodebytes.acasado.domain.OrderEventType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public record OrderEvent(
+public record OrderEventDto(
         Long orderId,
 
-        @NotNull(message = "eventType is required")
+        @NotNull
         OrderEventType eventType,
 
         @Valid
-        @NotNull(message = "phone is required")
-        Phone phone
-
+        @NotNull
+        PhoneDto phone
 ) {
 }

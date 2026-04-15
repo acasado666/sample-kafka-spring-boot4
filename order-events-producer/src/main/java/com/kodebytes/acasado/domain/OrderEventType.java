@@ -1,6 +1,7 @@
 package com.kodebytes.acasado.domain;
 
-public enum OrderEventStaus {
+public enum OrderEventType {
     ADD,
-    UPDATE
+    UPDATE,
+    CANCEL
 }

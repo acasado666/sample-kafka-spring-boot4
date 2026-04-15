@@ -1,71 +1,64 @@
-package com.learnkafka.controller;
+package com.kodebytes.acasado.controller;
 
-import com.learnkafka.dto.BookDto;
-import com.learnkafka.dto.BookResponseDto;
-import com.learnkafka.service.BookService;
+import com.kodebytes.acasado.dto.PhoneDto;
+import com.kodebytes.acasado.dto.PhoneResponseDto;
+import com.kodebytes.acasado.service.PhoneService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/books")
-public class BookController {
+@RequestMapping("/api/phones")
+public class PhoneController {
 
-    private static final Logger log = LoggerFactory.getLogger(BookController.class);
+    private static final Logger log = LoggerFactory.getLogger(PhoneController.class);
 
-    private final BookService bookService;
+    private final PhoneService phoneService;
 
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
+    public PhoneController(PhoneService phoneService) {
+        this.phoneService = phoneService;
     }
 
     @GetMapping
-    public ResponseEntity<List<BookResponseDto>> getAllBooks() {
+    public ResponseEntity<List<PhoneResponseDto>> getAllPhones() {
         log.info("GET /v1/books");
-        List<BookResponseDto> books = bookService.findAll();
+        List<PhoneResponseDto> books = phoneService.findAll();
         return ResponseEntity.ok(books);
     }
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<BookResponseDto> getBookById(@PathVariable Long bookId) {
+    public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long bookId) {
         log.info("GET /v1/books/{}", bookId);
-        return bookService.findById(bookId)
+        return phoneService.findById(bookId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<BookResponseDto> createBook(@RequestBody @Valid BookDto bookDto) {
-        log.info("POST /v1/books - {}", bookDto);
-        BookResponseDto created = bookService.create(bookDto);
+    public ResponseEntity<PhoneResponseDto> createPhone(@RequestBody @Valid PhoneDto phoneDto) {
+        log.info("POST /v1/books - {}", phoneDto);
+        PhoneResponseDto created = phoneService.create(phoneDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{bookId}")
-    public ResponseEntity<BookResponseDto> updateBook(@PathVariable Long bookId,
-                                                      @RequestBody @Valid BookDto bookDto) {
+    public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Long bookId,
+                                                      @RequestBody @Valid PhoneDto bookDto) {
         log.info("PUT /v1/books/{} - {}", bookId, bookDto);
-        return bookService.update(bookId, bookDto)
+        return phoneService.update(bookId, bookDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{bookId}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long bookId) {
+    public ResponseEntity<Void> deletePhone(@PathVariable Long bookId) {
         log.info("DELETE /v1/books/{}", bookId);
-        if (bookService.delete(bookId)) {
+        if (phoneService.delete(bookId)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

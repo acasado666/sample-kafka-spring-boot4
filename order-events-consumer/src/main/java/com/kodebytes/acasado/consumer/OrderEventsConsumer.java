@@ -1,7 +1,7 @@
 package com.kodebytes.acasado.consumer;
 
-import com.learnkafka.dto.LibraryEventDto;
-import com.learnkafka.service.LibraryEventService;
+import com.kodebytes.acasado.dto.OrderEventDto;
+import com.kodebytes.acasado.service.OrderEventService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,28 +10,28 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LibraryEventsConsumer {
+public class OrderEventsConsumer {
 
-    private static final Logger log = LoggerFactory.getLogger(LibraryEventsConsumer.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderEventsConsumer.class);
 
-    private final LibraryEventService libraryEventService;
+    private final OrderEventService orderEventService;
 
-    public LibraryEventsConsumer(LibraryEventService libraryEventService) {
-        this.libraryEventService = libraryEventService;
+    public OrderEventsConsumer(OrderEventService orderEventService) {
+        this.orderEventService = orderEventService;
     }
 
     // Default BATCH ack mode — no Acknowledgment parameter needed
-    // @KafkaListener(topics = "library-events")
-    // public void onMessage(ConsumerRecord<Integer, LibraryEventDto> consumerRecord) {
+    // @KafkaListener(topics = "order-events")
+    // public void onMessage(ConsumerRecord<Integer, OrderEventDto> consumerRecord) {
     //     log.info("ConsumerRecord : {}", consumerRecord);
-    //     libraryEventService.processEvent(consumerRecord);
+    //     orderEventService.processEvent(consumerRecord);
     // }
 
-    @KafkaListener(topics = "library-events")
-    public void onMessage(ConsumerRecord<Integer, LibraryEventDto> consumerRecord,
+    @KafkaListener(topics = "order-events")
+    public void onMessage(ConsumerRecord<Integer, OrderEventDto> consumerRecord,
                           Acknowledgment acknowledgment) {
         log.info("ConsumerRecord : {}", consumerRecord);
-        libraryEventService.processEvent(consumerRecord);
+        orderEventService.processEvent(consumerRecord);
         // Only acknowledge on success — on exception, DefaultErrorHandler takes over:
         // it retries with FixedBackOff, then persists to failure_record table on exhaustion.
         acknowledgment.acknowledge();

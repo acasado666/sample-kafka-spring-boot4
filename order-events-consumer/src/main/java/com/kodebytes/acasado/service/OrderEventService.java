@@ -1,13 +1,13 @@
-package com.learnkafka.service;
+package com.kodebytes.acasado.service;
 
-import com.learnkafka.domain.Book;
-import com.learnkafka.domain.LibraryEvent;
-import com.learnkafka.domain.LibraryEventType;
-import com.learnkafka.dto.LibraryEventDto;
-import com.learnkafka.dto.LibraryEventMapper;
-import com.learnkafka.dto.LibraryEventResponseDto;
-import com.learnkafka.repository.BookRepository;
-import com.learnkafka.repository.LibraryEventRepository;
+import com.kodebytes.acasado.domain.OrderEvent;
+import com.kodebytes.acasado.domain.OrderEventMapper;
+import com.kodebytes.acasado.domain.OrderEventType;
+import com.kodebytes.acasado.domain.Phone;
+import com.kodebytes.acasado.dto.OrderEventDto;
+import com.kodebytes.acasado.dto.OrderEventResponseDto;
+import com.kodebytes.acasado.repository.OrderEventRepository;
+import com.kodebytes.acasado.repository.PhoneRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,77 +18,77 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class LibraryEventService {
+public class OrderEventService {
 
-    private static final Logger log = LoggerFactory.getLogger(LibraryEventService.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderEventService.class);
 
-    private final LibraryEventRepository libraryEventRepository;
-    private final BookRepository bookRepository;
+    private final OrderEventRepository orderEventRepository;
+    private final PhoneRepository phoneRepository;
 
-    public LibraryEventService(LibraryEventRepository libraryEventRepository,
-                               BookRepository bookRepository) {
-        this.libraryEventRepository = libraryEventRepository;
-        this.bookRepository = bookRepository;
+    public OrderEventService(OrderEventRepository orderEventRepository,
+                             PhoneRepository phoneRepository) {
+        this.orderEventRepository = orderEventRepository;
+        this.phoneRepository = phoneRepository;
     }
 
     @Transactional
-    public void processEvent(ConsumerRecord<Integer, LibraryEventDto> consumerRecord) {
-        LibraryEventDto libraryEventDto = consumerRecord.value();
-        log.info("LibraryEventDto : {}", libraryEventDto);
+    public void processEvent(ConsumerRecord<Integer, OrderEventDto> consumerRecord) {
+        OrderEventDto orderEventDto = consumerRecord.value();
+        log.info("OrderEventDto : {}", orderEventDto);
 
-        if (libraryEventDto.eventType() == LibraryEventType.UPDATE) {
-            validate(libraryEventDto);
+        if (orderEventDto.eventType() == OrderEventType.UPDATE) {
+            validate(orderEventDto);
         }
 
-        save(libraryEventDto);
+        save(orderEventDto);
     }
 
-    private void validate(LibraryEventDto libraryEventDto) {
-        if (libraryEventDto.libraryEventId() == null) {
-            throw new IllegalArgumentException("Library Event Id is missing");
+    private void validate(OrderEventDto orderEventDto) {
+        if (orderEventDto.orderId() == null) {
+            throw new IllegalArgumentException("Order Event Id is missing");
         }
 
-        Optional<LibraryEvent> libraryEventOptional = libraryEventRepository.findById(libraryEventDto.libraryEventId());
+        Optional<OrderEvent> libraryEventOptional = orderEventRepository.findById(orderEventDto.orderId());
         if (libraryEventOptional.isEmpty()) {
             throw new IllegalArgumentException("Not a valid library Event");
         }
         log.info("Validation is successful for the library Event : {}", libraryEventOptional.get());
     }
 
-    private void save(LibraryEventDto libraryEventDto) {
-        LibraryEvent libraryEvent = LibraryEventMapper.toEntity(libraryEventDto);
+    private void save(OrderEventDto orderEventDto) {
+        OrderEvent orderEvent = OrderEventMapper.toEntity(orderEventDto);
 
         // For updates, we need the original to keep its createdAt timestamp if managed by @PrePersist
         // but JPA's @PrePersist handles it if it's a new entity.
         // If it's an update, the ID is already set in the entity from the mapper.
 
-        // Save LibraryEvent first — it has @GeneratedValue(IDENTITY), DB generates the ID for new ones
-        libraryEvent.setBook(null); // detach book temporarily to avoid cascade issues on persist
-        LibraryEvent savedEvent = libraryEventRepository.save(libraryEvent);
+        // Save OrderEvent first — it has @GeneratedValue(IDENTITY), DB generates the ID for new ones
+        orderEvent.setPhone(null); // detach phone temporarily to avoid cascade issues on persist
+        OrderEvent savedOrderEvent = orderEventRepository.save(orderEvent);
 
-        // Now save Book with the FK pointing to the persisted LibraryEvent
-        Book book = LibraryEventMapper.toBookEntity(libraryEventDto.book());
-        book.setLibraryEvent(savedEvent);
-        Book savedBook = bookRepository.save(book);
+        // Now save Phone with the FK pointing to the persisted OrderEvent
+        Phone phone = OrderEventMapper.toPhoneEntity(orderEventDto.phone());
+        phone.setOrderEvent(savedOrderEvent);
+        Phone savedPhone = phoneRepository.save(phone);
 
         // Set bidirectional back-reference for in-memory consistency
-        savedEvent.setBook(savedBook);
+        savedOrderEvent.setPhone(savedPhone);
 
-        log.info("Successfully persisted/updated the library event : {}", savedEvent);
+        log.info("Successfully persisted/updated the phone event : {}", savedPhone);
     }
 
-    public List<LibraryEventResponseDto> findAll() {
-        log.info("Fetching all library events");
-        return libraryEventRepository.findAll()
+    public List<OrderEventResponseDto> findAll() {
+        log.info("Fetching all orders events");
+        return orderEventRepository.findAll()
                 .stream()
-                .map(LibraryEventMapper::toLibraryEventResponseDto)
+                .map(OrderEventMapper::toOrderEventResponseDto)
                 .toList();
     }
 
-    public Optional<LibraryEventResponseDto> findById(Long libraryEventId) {
-        log.info("Fetching library event with id: {}", libraryEventId);
-        return libraryEventRepository.findById(libraryEventId)
-                .map(LibraryEventMapper::toLibraryEventResponseDto);
+    public Optional<OrderEventResponseDto> findById(Long libraryEventId) {
+        log.info("Fetching order event with id: {}", libraryEventId);
+        return orderEventRepository.findById(libraryEventId)
+                .map(OrderEventMapper::toOrderEventResponseDto);
     }
 }
 

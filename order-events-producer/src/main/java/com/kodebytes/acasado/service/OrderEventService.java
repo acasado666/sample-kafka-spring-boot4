@@ -1,87 +1,56 @@
-package com.kodebytes.acasado;
+package com.kodebytes.acasado.service;
 
-import com.learnjava.domain.LibraryEvent;
-import com.learnjava.exception.LibraryEventPublishException;
-import com.learnjava.producer.LibraryEventProducer;
+import com.kodebytes.acasado.domain.OrderEvent;
+import com.kodebytes.acasado.exception.OrderEventException;
+import com.kodebytes.acasado.producer.OrderEventProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Service layer for {@link LibraryEvent} operations.
- *
- * <p>Enforces business rules before delegating to the Kafka producer.
- * Keeps the controller thin: validation (Bean Validation) lives on the
- * controller, while business-rule enforcement lives here.
- */
 @Service
-public class LibraryEventService {
+public class OrderEventService {
 
-    private static final Logger log = LoggerFactory.getLogger(LibraryEventService.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderEventService.class);
 
-    private final LibraryEventProducer libraryEventProducer;
+    private final OrderEventProducer orderEventProducer;
 
-    public LibraryEventService(LibraryEventProducer libraryEventProducer) {
-        this.libraryEventProducer = libraryEventProducer;
+    public OrderEventService(OrderEventProducer orderEventProducer) {
+        this.orderEventProducer = orderEventProducer;
     }
 
     /**
-     * Publishes a new library event to Kafka asynchronously.
-     *
-     * <p>The caller (controller) is responsible for enforcing {@code eventType == ADD}
-     * before invoking this method.
-     *
-     * @param libraryEvent the validated event from the controller
-     * @return a {@link CompletableFuture} that completes with the same event once the
-     *         broker acknowledges the message, or exceptionally with a
-     *         {@link LibraryEventPublishException} on failure
+     * Publishes a new order event to Kafka asynchronously.
      */
-    public CompletableFuture<LibraryEvent> createLibraryEvent(LibraryEvent libraryEvent) {
+    public CompletableFuture<OrderEvent> createOrderEvent(OrderEvent orderEvent) {
 
-        log.debug("Creating library event: libraryEventId={}, bookId={}",
-                libraryEvent.libraryEventId(),
-                libraryEvent.book() != null ? libraryEvent.book().bookId() : null);
+        log.debug("Creating order event: orderEventId={}, phoneId={}",
+                orderEvent.orderId(),
+                orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
-        return libraryEventProducer.sendLibraryEvent(libraryEvent)
-                .thenApply(_ -> libraryEvent)
+        return orderEventProducer.sendOrderEvent(orderEvent)
+                .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
-                    throw new LibraryEventPublishException(
-                            "Failed to publish library event to Kafka", ex.getCause());
+                    throw new OrderEventException(
+                            "Failed to publish order event to Kafka", ex.getCause());
                 });
     }
 
     /**
-     * Publishes an updated library event to Kafka asynchronously.
-     *
-     * <p>The caller (controller) is responsible for enforcing {@code eventType == UPDATE}
-     * and a non-null {@code libraryEventId} before invoking this method.
-     *
-     * @param libraryEvent the validated event from the controller
-     * @return a {@link CompletableFuture} that completes with the same event once the
-     *         broker acknowledges the message, or exceptionally with a
-     *         {@link LibraryEventPublishException} on failure
+     * Publishes an updated order event to Kafka asynchronously.
      */
-    public CompletableFuture<LibraryEvent> updateLibraryEvent(LibraryEvent libraryEvent) {
+    public CompletableFuture<OrderEvent> updateOrderEvent(OrderEvent orderEvent) {
 
-        log.debug("Updating library event: libraryEventId={}, bookId={}",
-                libraryEvent.libraryEventId(),
-                libraryEvent.book() != null ? libraryEvent.book().bookId() : null);
+        log.debug("Updating order event: orderEventId={}, bookId={}",
+                orderEvent.orderId(),
+                orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
-        // thenApply  — transforms SendResult<Long, LibraryEvent> → LibraryEvent so the
-        //              controller can echo the payload in the 200 OK body.
-        //              (whenComplete in the producer already logs partition / offset.)
-        //
-        // exceptionally — re-wraps the raw Kafka exception into LibraryEventPublishException
-        //                 so LibraryEventsControllerAdvice.handlePublishException fires
-        //                 correctly for async controller results.
-        //                 (whenComplete already logged the failure at the transport layer.)
-        return libraryEventProducer.sendLibraryEvent(libraryEvent)
-                .thenApply(_ -> libraryEvent)
+        return orderEventProducer.sendOrderEvent(orderEvent)
+                .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
-                    throw new LibraryEventPublishException(
-                            "Failed to publish library event to Kafka", ex.getCause());
+                    throw new OrderEventException(
+                            "Failed to publish order event to Kafka", ex.getCause());
                 });
     }
 }

@@ -1,10 +1,10 @@
-package com.learnkafka.service;
+package com.kodebytes.acasado.service;
 
-import com.learnkafka.domain.Book;
-import com.learnkafka.dto.BookDto;
-import com.learnkafka.dto.BookResponseDto;
-import com.learnkafka.dto.LibraryEventMapper;
-import com.learnkafka.repository.BookRepository;
+import com.kodebytes.acasado.domain.OrderEventMapper;
+import com.kodebytes.acasado.domain.Phone;
+import com.kodebytes.acasado.dto.PhoneDto;
+import com.kodebytes.acasado.dto.PhoneResponseDto;
+import com.kodebytes.acasado.repository.PhoneRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,64 +14,66 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class BookService {
+public class PhoneService {
 
-    private static final Logger log = LoggerFactory.getLogger(BookService.class);
+    private static final Logger log = LoggerFactory.getLogger(PhoneService.class);
 
-    private final BookRepository bookRepository;
+    private final PhoneRepository bookRepository;
 
-    public BookService(BookRepository bookRepository) {
+    public PhoneService(PhoneRepository bookRepository) {
         this.bookRepository = bookRepository;
     }
 
-    public List<BookResponseDto> findAll() {
+    public List<PhoneResponseDto> findAll() {
         log.info("Fetching all books");
         return bookRepository.findAll()
                 .stream()
-                .map(LibraryEventMapper::toBookResponseDto)
+                .map(OrderEventMapper::toPhoneResponseDto)
                 .toList();
     }
 
-    public Optional<BookResponseDto> findById(Long bookId) {
+    public Optional<PhoneResponseDto> findById(Long bookId) {
         log.info("Fetching book with id: {}", bookId);
         return bookRepository.findById(bookId)
-                .map(LibraryEventMapper::toBookResponseDto);
+                .map(OrderEventMapper::toPhoneResponseDto);
     }
 
     @Transactional
-    public BookResponseDto create(BookDto bookDto) {
-        log.info("Creating book: {}", bookDto);
-        Book book = LibraryEventMapper.toBookEntity(bookDto);
-        Book savedBook = bookRepository.save(book);
-        log.info("Successfully created book: {}", savedBook);
-        return LibraryEventMapper.toBookResponseDto(savedBook);
+    public PhoneResponseDto create(PhoneDto phoneDto) {
+        log.info("Creating book: {}", phoneDto);
+        Phone book = OrderEventMapper.toPhoneEntity(phoneDto);
+        Phone savedPhone = bookRepository.save(book);
+        log.info("Successfully created book: {}", savedPhone);
+        return OrderEventMapper.toPhoneResponseDto(savedPhone);
     }
 
     @Transactional
-    public Optional<BookResponseDto> update(Long bookId, BookDto bookDto) {
-        log.info("Updating book with id: {}", bookId);
-        return bookRepository.findById(bookId)
-                .map(existingBook -> {
-                    existingBook.setBookName(bookDto.bookName());
-                    existingBook.setBookAuthor(bookDto.bookAuthor());
-                    Book updatedBook = bookRepository.save(existingBook);
-                    log.info("Successfully updated book: {}", updatedBook);
-                    return LibraryEventMapper.toBookResponseDto(updatedBook);
+    public Optional<PhoneResponseDto> update(Long orderId, PhoneDto phoneDto) {
+        log.info("Updating phone with id: {}", orderId);
+        return bookRepository.findById(orderId)
+                .map(existingPhone -> {
+                    existingPhone.setPhoneName(phoneDto.phoneName());
+                    existingPhone.setPhoneModel(phoneDto.phoneModel());
+                    existingPhone.setPhonePrice(phoneDto.phonePrice());
+                    existingPhone.setPhoneManufacturer(phoneDto.phoneManufacturer());
+                    Phone updatedPhone = bookRepository.save(existingPhone);
+                    log.info("Successfully updated book: {}", updatedPhone);
+                    return OrderEventMapper.toPhoneResponseDto(updatedPhone);
                 });
     }
 
     @Transactional
-    public boolean delete(Long bookId) {
-        log.info("Deleting book with id: {}", bookId);
-        return bookRepository.findById(bookId)
-                .map(book -> {
+    public boolean delete(Long orderId) {
+        log.info("Deleting order with id: {}", orderId);
+        return bookRepository.findById(orderId)
+                .map(phone -> {
                     // Break the bidirectional OneToOne reference so that
                     // LibraryEvent's cascade = ALL does not re-persist the book
-                    if (book.getLibraryEvent() != null) {
-                        book.getLibraryEvent().setBook(null);
+                    if (phone.getOrderEvent() != null) {
+                        phone.getOrderEvent().setPhone(null);
                     }
-                    bookRepository.delete(book);
-                    log.info("Successfully deleted book with id: {}", bookId);
+                    bookRepository.delete(phone);
+                    log.info("Successfully deleted book with id: {}", orderId);
                     return true;
                 })
                 .orElse(false);

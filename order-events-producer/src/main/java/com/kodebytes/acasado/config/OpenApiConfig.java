@@ -1,4 +1,4 @@
-package com.learnjava.config;
+package com.kodebytes.acasado.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -12,9 +12,9 @@ public class OpenApiConfig {
     public OpenAPI libraryEventsOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Library Events Producer API")
+                        .title("Order Events Producer API")
                         .version("v1")
-                        .description("REST API for publishing library events to Kafka."));
+                        .description("REST API for publishing order events to Kafka."));
     }
 }
 

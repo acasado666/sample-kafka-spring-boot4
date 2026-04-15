@@ -3,14 +3,15 @@ package com.kodebytes.acasado.domain;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public record LibraryEvent(
-        Long libraryEventId,
+public record OrderEvent(
+        Long orderId,
 
         @NotNull(message = "eventType is required")
-        LibraryEventType eventType,
+        OrderEventType eventType,
 
         @Valid
-        @NotNull(message = "book is required")
-        Book book
+        @NotNull(message = "phone is required")
+        Phone phone
+
 ) {
 }

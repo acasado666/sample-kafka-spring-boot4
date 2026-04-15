@@ -3,24 +3,7 @@ server:
 
 spring:
   application:
-    name: library-events-consumer
-
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/mydatabase
-#    username: myuser
-##    password: secret
-#  jpa:
-#    hibernate:
-#      ddl-auto: none
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#  flyway:
-#    enabled: true
-#    locations: classpath:db/migration
-#    baseline-on-migrate: true
-
+    name: order-events-consumer
     datasource:
       url: jdbc:h2:mem:testdb
       driverClassName: org.h2.Driver
@@ -38,7 +21,7 @@ spring:
   kafka:
     consumer:
       bootstrap-servers: localhost:9092
-      group-id: library-events-listener-group
+      group-id: order-events-listener-group
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       auto-offset-reset: latest

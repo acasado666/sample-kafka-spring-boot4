@@ -1,19 +1,22 @@
-# Library Events Producer API
+# Order Events Producer API
 
-A Spring Boot application that provides REST endpoints to publish library events to Apache Kafka. This service enables clients to emit library event changes (ADD, UPDATE) through a well-defined HTTP API.
+A Spring Boot 4 application that provides REST endpoints to publish orders events to Apache Kafka. 
+This service enables clients to emit order event changes (ADD, UPDATE, CANCEL) through a well-defined HTTP API.
 
 ## 📋 Quick Links
 
-- **[Product Requirements Document](./docs/PRD.md)** - Complete product specifications, features, and requirements
-- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN_README.md)** - Engineering roadmap and implementation details
-- **[Architecture Diagram](./docs/ARCHITECTURE_DIAGRAM.md)** - System architecture, testing setup, and component interactions
+[//]: # (- **[Product Requirements Document]&#40;./docs/PRD.md&#41;** - Complete product specifications, features, and requirements)
+
+[//]: # (- **[Implementation Plan]&#40;./docs/IMPLEMENTATION_PLAN_README.md&#41;** - Engineering roadmap and implementation details)
+
+[//]: # (- **[Architecture Diagram]&#40;./docs/ARCHITECTURE_DIAGRAM.md&#41;** - System architecture, testing setup, and component interactions)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Java 25+
 - Docker & Docker Compose (for local Kafka broker)
-- Gradle
+- Maven
 
 ### Setup & Run
 
@@ -21,47 +24,51 @@ A Spring Boot application that provides REST endpoints to publish library events
    ```bash
    docker-compose up -d
    ```
+   
    This starts a KRaft-mode Kafka broker on `localhost:9092`
+
 
 2. **Build the Application**:
    ```bash
-   ./gradlew build
+   .\mvnw.cmd clean install
    ```
 
 3. **Run the Application**:
    ```bash
-   ./gradlew bootRun
+   .\mvnw.cmd spring-boot:run
    ```
    The API will be available at `http://localhost:8080`
 
-4. **Run Tests**:
-   ```bash
-   ./gradlew test
-   ```
-   Tests use embedded Kafka (no Docker required)
 
-5. **Stop Kafka**:
+4. **Stop Kafka**:
    ```bash
    docker-compose down
    ```
 
 ## 📚 Documentation
 
-### Product Requirements Document ([PRD.md](./docs/PRD.md))
-Contains:
-- Product overview and goals
-- Personas and use cases
-- Functional requirements
-- API endpoint specifications
-- Request/response formats
-- Validation rules and error handling
+[//]: # (### Product Requirements Document &#40;[PRD.md]&#40;./docs/PRD.md&#41;&#41;)
+[//]: # (Contains:)
+
+[//]: # (- Product overview and goals)
+
+[//]: # (- Personas and use cases)
+
+[//]: # (- Functional requirements)
+
+[//]: # (- API endpoint specifications)
+
+[//]: # (- Request/response formats)
+
+[//]: # (- Validation rules and error handling)
 
 **Key Points:**
-- POST `/v1/library-events` - Create new library event (ADD type only)
-- PUT `/v1/library-events` - Update existing library event (UPDATE type, requires libraryEventId)
-- Events are published to Kafka topic: `library-events`
+- POST `/api/order-events` - Create new order event (ADD type only)
+- PUT `/api/order-events` - Update existing order event (UPDATE type, requires orderEventId)
+- DELETE `/api/order-events/{id}` - Cancel existing order event (CANCEL type, requires orderEventId)
+- Events are published to Kafka topic: `order-events`
 
-### Implementation Plan ([IMPLEMENTATION_PLAN_README.md](./docs/IMPLEMENTATION_PLAN_README.md))
+### Implementation Plan 
 Covers:
 - Domain model design
 - API layer implementation
@@ -71,34 +78,43 @@ Covers:
 - Testing strategy
 - Observability and logging
 
-### Architecture Diagram ([ARCHITECTURE_DIAGRAM.md](./docs/ARCHITECTURE_DIAGRAM.md))
-Includes:
-- Production/Development architecture flow
-- Testing architecture with embedded Kafka
-- System component breakdown
-- Technology stack details
+[//]: # (### Architecture Diagram &#40;[ARCHITECTURE_DIAGRAM.md]&#40;./docs/ARCHITECTURE_DIAGRAM.md&#41;&#41;)
 
-## 🏗️ Architecture Overview
+[//]: # (Includes:)
+
+[//]: # (- Production/Development architecture flow)
+
+[//]: # (- Testing architecture with embedded Kafka)
+
+[//]: # (- System component breakdown)
+
+[//]: # (- Technology stack details)
+
+##  Architecture Overview
 
 ### Production/Development Flow
 ```
 REST Client 
     ↓
-LibraryEventsController (POST/PUT)
+OrderEventsController (POST/PUT)
     ↓
 Validation (Bean Validation)
     ↓
-LibraryEventProducer (KafkaTemplate)
+OrderEventProducer (KafkaTemplate)
     ↓
 Retry Strategy (at-least-once)
     ↓
 Kafka Broker
 ```
 
-### Testing Approach
-- **Integration Tests**: Use `@SpringBootTest` with `@EmbeddedKafka` for real component interactions
-- **No Mocking**: Tests verify actual behavior without mocks
-- **Isolated Environment**: Embedded Kafka provides isolation without external dependencies
+[//]: # (TODO)
+[//]: # (### Testing Approach)
+
+[//]: # (- **Integration Tests**: Use `@SpringBootTest` with `@EmbeddedKafka` for real component interactions)
+
+[//]: # (- **No Mocking**: Tests verify actual behavior without mocks)
+
+[//]: # (- **Isolated Environment**: Embedded Kafka provides isolation without external dependencies)
 
 ## 🔧 Configuration
 
@@ -124,7 +140,7 @@ library:
 ## 📦 Dependencies
 
 ### Core
-- Spring Boot 4.0.2
+- Spring Boot 4.0.5
 - Spring Kafka
 - Spring Validation
 - Spring Web MVC
@@ -137,79 +153,80 @@ library:
 
 ## 🧪 Testing
 
-### Running Tests
-```bash
-./gradlew test
-```
+[//]: # (TODO)
+[//]: # (### Running Tests)
 
-### Integration Tests
-Located in `src/test/java/com/learnkafka/controller/LibraryEventsControllerIntegrationTest.java`
+[//]: # (```bash)
 
-Tests include:
-- Valid POST/PUT operations
-- Validation error scenarios
-- Multiple event publishing
-- Invalid JSON handling
-- Content-Type validation
+[//]: # (./gradlew test)
 
-**Key Test Configuration:**
-```java
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@EmbeddedKafka(partitions = 1, topics = "library-events")
-```
+[//]: # (```)
+
+[//]: # ()
+[//]: # (### Integration Tests)
+
+[//]: # (Located in `src/test/java/com/learnkafka/controller/LibraryEventsControllerIntegrationTest.java`)
+
+[//]: # ()
+[//]: # (Tests include:)
+
+[//]: # (- Valid POST/PUT operations)
+
+[//]: # (- Validation error scenarios)
+
+[//]: # (- Multiple event publishing)
+
+[//]: # (- Invalid JSON handling)
+
+[//]: # (- Content-Type validation)
+
+[//]: # ()
+[//]: # (**Key Test Configuration:**)
+
+[//]: # (```java)
+
+[//]: # (@SpringBootTest&#40;webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT&#41;)
+
+[//]: # (@AutoConfigureMockMvc)
+
+[//]: # (@EmbeddedKafka&#40;partitions = 1, topics = "library-events"&#41;)
+
+[//]: # (```)
 
 ## 📝 API Examples
 
-### Create Library Event (POST)
+### Create Order Event (POST)
 ```bash
-curl -X POST http://localhost:8080/v1/library-events \
+curl -X POST http://localhost:8080/api/order-events \
   -H "Content-Type: application/json" \
   -d '{
-    "libraryEventType": "ADD",
-    "book": {
-      "bookId": 1,
-      "bookName": "Clean Code",
-      "bookAuthor": "Robert C. Martin"
-    }
+#  
   }'
 ```
 
 **Response (201 Created):**
 ```json
 {
-  "libraryEventId": 1,
-  "libraryEventType": "ADD",
-  "book": {
-    "bookId": 1,
-    "bookName": "Clean Code",
-    "bookAuthor": "Robert C. Martin"
-  }
+
 }
 ```
 
-### Update Library Event (PUT)
+### Update Order Event (PUT)
 ```bash
-curl -X PUT http://localhost:8080/v1/library-events \
+curl -X PUT http://localhost:8080/api/order-events \
   -H "Content-Type: application/json" \
   -d '{
-    "libraryEventId": 1,
-    "libraryEventType": "UPDATE",
-    "book": {
-      "bookId": 1,
-      "bookName": "Clean Code (2nd Edition)",
-      "bookAuthor": "Robert C. Martin"
-    }
+    
   }'
 ```
 
 ## 📂 Project Structure
 
 ```
-library-events-producer-v2/
+order-events-producer/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/learnkafka/
+│   │   ├── java/com/kopdebytes/acasado/
 │   │   │   ├── controller/      # API endpoints
 │   │   │   ├── domain/          # Domain models
 │   │   │   ├── producer/        # Kafka producer
@@ -217,7 +234,7 @@ library-events-producer-v2/
 │   │   └── resources/
 │   │       └── application.yml   # Configuration
 │   └── test/
-│       ├── java/com/learnkafka/
+│       ├── java/com/kopdebytes/acasado/
 │       │   └── controller/       # Integration tests
 │       └── resources/
 ├── docs/
@@ -225,25 +242,26 @@ library-events-producer-v2/
 │   ├── IMPLEMENTATION_PLAN_README.md
 │   └── ARCHITECTURE_DIAGRAM.md
 ├── compose.yaml                  # Docker Compose Kafka setup
-├── build.gradle                  # Gradle configuration
-└── README.md                      # This file
+├── pom.xml                       # Maven configuration
+└── README.md                     # This file
 ```
 
 ## 🔍 Key Concepts
 
 ### Event Types
-- **ADD**: Create a new library event (POST endpoint)
-- **UPDATE**: Update an existing library event (PUT endpoint)
+- **ADD**: Create a new order event (POST endpoint)
+- **UPDATE**: Update an existing order event (PUT endpoint)
+- **DELETE**: Delete an existing order event (DELETE endpoint)
 
 ### Validation Rules
-- `libraryEventType` is required and must be valid
-- For POST: `libraryEventType` must be ADD
-- For PUT: `libraryEventId` is required, `libraryEventType` must be UPDATE
-- Book fields (`bookId`, `bookName`, `bookAuthor`) are required and cannot be blank
+- `orderEventType` is required and must be valid
+- For POST: `orderEventType` must be ADD
+- For PUT: `orderEventType` is required, `orderEventType` must be UPDATE
+- Phone fields (`phoneId`, `phoneName`, `phoneModel`, `phonePrice`, `phoneManufacturer`) are required and cannot be blank
 
 ### Kafka Publishing
-- Messages are published to `library-events` topic
-- Uses `libraryEventId` as message key (when present)
+- Messages are published to `order-events` topic
+- Uses `orderId` as message key (when present)
 - JSON serialization for payloads
 - At-least-once delivery semantics with retry strategy
 
@@ -251,13 +269,16 @@ library-events-producer-v2/
 
 ### Building
 ```bash
-./gradlew clean build
+.\mvnw.cmd clean install
 ```
-
+### Running
+```bash
+.\mvnw.cmd spring-boot:run
+```
 ### Development Mode
 The `spring-boot-docker-compose` dependency automatically starts Docker Compose services when running the application:
 ```bash
-./gradlew bootRun
+.\mvnw.cmd spring-boot:run
 ```
 
 ### Debugging
@@ -289,10 +310,7 @@ The application logs:
 
 ## 📞 Support & Contributions
 
-For questions or issues:
-1. Review the [PRD](./docs/PRD.md) for requirements
-2. Check the [Implementation Plan](./docs/IMPLEMENTATION_PLAN_README.md) for technical details
-3. Refer to [Architecture Diagram](./docs/ARCHITECTURE_DIAGRAM.md) for system design
+[//]: # (TODO)
 
 ## 📄 License
 
@@ -300,6 +318,6 @@ This is an educational project for learning Kafka and Spring Boot integration.
 
 ---
 
-**Last Updated**: February 2026  
+**Last Updated**: April 2026  
 **Version**: 0.0.1-SNAPSHOT
 

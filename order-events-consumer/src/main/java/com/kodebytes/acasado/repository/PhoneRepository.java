@@ -1,8 +1,8 @@
-package com.learnkafka.repository;
+package com.kodebytes.acasado.repository;
 
-import com.learnkafka.domain.Book;
+import com.kodebytes.acasado.domain.Phone;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BookRepository extends JpaRepository<Book, Long> {
+public interface PhoneRepository extends JpaRepository<Phone, Long> {
 }
 

@@ -1,7 +1,7 @@
-package com.learnkafka.controller;
+package com.kodebytes.acasado.controller;
 
-import com.learnkafka.dto.LibraryEventResponseDto;
-import com.learnkafka.service.LibraryEventService;
+import com.kodebytes.acasado.dto.OrderEventResponseDto;
+import com.kodebytes.acasado.service.OrderEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -13,29 +13,29 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/library-events")
+@RequestMapping("/api/orders")
 public class LibraryEventController {
 
     private static final Logger log = LoggerFactory.getLogger(LibraryEventController.class);
 
-    private final LibraryEventService libraryEventService;
+    private final OrderEventService orderEventService;
 
-    public LibraryEventController(LibraryEventService libraryEventService) {
-        this.libraryEventService = libraryEventService;
+    public LibraryEventController(OrderEventService orderEventService) {
+        this.orderEventService = orderEventService;
     }
 
     @GetMapping
-    public ResponseEntity<List<LibraryEventResponseDto>> getAllLibraryEvents() {
+    public ResponseEntity<List<OrderEventResponseDto>> getAllLibraryEvents() {
         log.info("GET /v1/library-events");
-        List<LibraryEventResponseDto> libraryEvents = libraryEventService.findAll();
+        List<OrderEventResponseDto> libraryEvents = orderEventService.findAll();
         return ResponseEntity.ok(libraryEvents);
     }
 
     @GetMapping("/{libraryEventId}")
-    public ResponseEntity<LibraryEventResponseDto> getLibraryEventById(
+    public ResponseEntity<OrderEventResponseDto> getLibraryEventById(
             @PathVariable Long libraryEventId) {
         log.info("GET /v1/library-events/{}", libraryEventId);
-        return libraryEventService.findById(libraryEventId)
+        return orderEventService.findById(libraryEventId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -1,4 +1,4 @@
-package com.kodebytes.acasado.domain;
+package com.kodebytes.acasado.dto;
 
 public enum OrderEventType {
     ADD,
