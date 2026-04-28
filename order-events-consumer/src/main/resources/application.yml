@@ -29,8 +29,8 @@ spring:
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.IntegerDeserializer
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: com.learnkafka.dto,com.learnkafka.domain
-        spring.json.value.default.type: com.learnkafka.dto.LibraryEventDto
-        spring.json.type.mapping: com.learnjava.domain.LibraryEvent:com.learnkafka.dto.LibraryEventDto
+        spring.json.value.default.type: com.learnkafka.dto.OrderEventDto
+        spring.json.type.mapping: com.learnjava.domain.OrderEvent:com.learnkafka.dto.OrderEventDto
 
 retry:
   scheduler:

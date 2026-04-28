@@ -121,15 +121,12 @@ Kafka Broker
 ### Kafka Configuration (`application.yml`)
 ```yaml
 spring:
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-library:
-  events:
-    topic: library-events
+   kafka:
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      topic: order-events
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 ```
 
 ### Docker Compose Setup (`compose.yaml`)
@@ -165,7 +162,7 @@ library:
 [//]: # ()
 [//]: # (### Integration Tests)
 
-[//]: # (Located in `src/test/java/com/learnkafka/controller/LibraryEventsControllerIntegrationTest.java`)
+[//]: # (Located in `src/test/java/com/learnkafka/controller/LibOrderraryEventsControllerIntegrationTest.java`)
 
 [//]: # ()
 [//]: # (Tests include:)
@@ -189,7 +186,7 @@ library:
 
 [//]: # (@AutoConfigureMockMvc)
 
-[//]: # (@EmbeddedKafka&#40;partitions = 1, topics = "library-events"&#41;)
+[//]: # (@EmbeddedKafka&#40;partitions = 1, topics = "order-events"&#41;)
 
 [//]: # (```)
 
@@ -318,6 +315,6 @@ This is an educational project for learning Kafka and Spring Boot integration.
 
 ---
 
-**Last Updated**: April 2026  
+**Last Updated**: March 2026  
 **Version**: 0.0.1-SNAPSHOT
 

@@ -13,29 +13,29 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
-public class LibraryEventController {
+@RequestMapping("/api/order-events")
+public class OrderEventController {
 
-    private static final Logger log = LoggerFactory.getLogger(LibraryEventController.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderEventController.class);
 
     private final OrderEventService orderEventService;
 
-    public LibraryEventController(OrderEventService orderEventService) {
+    public OrderEventController(OrderEventService orderEventService) {
         this.orderEventService = orderEventService;
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderEventResponseDto>> getAllLibraryEvents() {
-        log.info("GET /v1/library-events");
-        List<OrderEventResponseDto> libraryEvents = orderEventService.findAll();
-        return ResponseEntity.ok(libraryEvents);
+    public ResponseEntity<List<OrderEventResponseDto>> getAllOrderEvents() {
+        log.info("GET /api/order-events");
+        List<OrderEventResponseDto> orderEvents = orderEventService.findAll();
+        return ResponseEntity.ok(orderEvents);
     }
 
-    @GetMapping("/{libraryEventId}")
-    public ResponseEntity<OrderEventResponseDto> getLibraryEventById(
-            @PathVariable Long libraryEventId) {
-        log.info("GET /v1/library-events/{}", libraryEventId);
-        return orderEventService.findById(libraryEventId)
+    @GetMapping("/{orderEventId}")
+    public ResponseEntity<OrderEventResponseDto> getOrderEventById(
+            @PathVariable Long orderEventId) {
+        log.info("GET /api/order-events/{}", orderEventId);
+        return orderEventService.findById(orderEventId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

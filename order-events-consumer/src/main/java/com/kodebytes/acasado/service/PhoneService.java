@@ -18,46 +18,46 @@ public class PhoneService {
 
     private static final Logger log = LoggerFactory.getLogger(PhoneService.class);
 
-    private final PhoneRepository bookRepository;
+    private final PhoneRepository phoneRepository;
 
-    public PhoneService(PhoneRepository bookRepository) {
-        this.bookRepository = bookRepository;
+    public PhoneService(PhoneRepository phoneRepository) {
+        this.phoneRepository = phoneRepository;
     }
 
     public List<PhoneResponseDto> findAll() {
-        log.info("Fetching all books");
-        return bookRepository.findAll()
+        log.info("Fetching all phones");
+        return phoneRepository.findAll()
                 .stream()
                 .map(OrderEventMapper::toPhoneResponseDto)
                 .toList();
     }
 
-    public Optional<PhoneResponseDto> findById(Long bookId) {
-        log.info("Fetching book with id: {}", bookId);
-        return bookRepository.findById(bookId)
+    public Optional<PhoneResponseDto> findById(Long phoneId) {
+        log.info("Fetching phone with id: {}", phoneId);
+        return phoneRepository.findById(phoneId)
                 .map(OrderEventMapper::toPhoneResponseDto);
     }
 
     @Transactional
     public PhoneResponseDto create(PhoneDto phoneDto) {
-        log.info("Creating book: {}", phoneDto);
-        Phone book = OrderEventMapper.toPhoneEntity(phoneDto);
-        Phone savedPhone = bookRepository.save(book);
-        log.info("Successfully created book: {}", savedPhone);
+        log.info("Creating phone: {}", phoneDto);
+        Phone phone = OrderEventMapper.toPhoneEntity(phoneDto);
+        Phone savedPhone = phoneRepository.save(phone);
+        log.info("Successfully created phone: {}", savedPhone);
         return OrderEventMapper.toPhoneResponseDto(savedPhone);
     }
 
     @Transactional
     public Optional<PhoneResponseDto> update(Long orderId, PhoneDto phoneDto) {
         log.info("Updating phone with id: {}", orderId);
-        return bookRepository.findById(orderId)
+        return phoneRepository.findById(orderId)
                 .map(existingPhone -> {
                     existingPhone.setPhoneName(phoneDto.phoneName());
                     existingPhone.setPhoneModel(phoneDto.phoneModel());
                     existingPhone.setPhonePrice(phoneDto.phonePrice());
                     existingPhone.setPhoneManufacturer(phoneDto.phoneManufacturer());
-                    Phone updatedPhone = bookRepository.save(existingPhone);
-                    log.info("Successfully updated book: {}", updatedPhone);
+                    Phone updatedPhone = phoneRepository.save(existingPhone);
+                    log.info("Successfully updated phone: {}", updatedPhone);
                     return OrderEventMapper.toPhoneResponseDto(updatedPhone);
                 });
     }
@@ -65,15 +65,15 @@ public class PhoneService {
     @Transactional
     public boolean delete(Long orderId) {
         log.info("Deleting order with id: {}", orderId);
-        return bookRepository.findById(orderId)
+        return phoneRepository.findById(orderId)
                 .map(phone -> {
                     // Break the bidirectional OneToOne reference so that
-                    // LibraryEvent's cascade = ALL does not re-persist the book
+                    // OrderEvent's cascade = ALL does not re-persist the phone
                     if (phone.getOrderEvent() != null) {
                         phone.getOrderEvent().setPhone(null);
                     }
-                    bookRepository.delete(phone);
-                    log.info("Successfully deleted book with id: {}", orderId);
+                    phoneRepository.delete(phone);
+                    log.info("Successfully deleted phone with id: {}", orderId);
                     return true;
                 })
                 .orElse(false);

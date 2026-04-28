@@ -3,12 +3,8 @@ package com.kodebytes.acasado.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Application-level producer configuration.
- */
 @Configuration
 public class ObjectMapperConfig {
 

@@ -1,11 +1,9 @@
 package com.kodebytes.acasado.controller;
 
-import com.kodebytes.acasado.config.AppConstants;
+import com.kodebytes.acasado.controller.OrderEventsControllerAdvice.ErrorResponse;
 import com.kodebytes.acasado.domain.OrderEvent;
 import com.kodebytes.acasado.domain.OrderEventType;
 import com.kodebytes.acasado.service.OrderEventService;
-import com.kodebytes.acasado.controller.OrderEventsControllerAdvice.ErrorResponse;
-
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping(AppConstants.API_BASE_PATH)
+@RequestMapping("/api/orderevent")
 public class OrderEventsController {
 
     private final OrderEventService orderEventService;

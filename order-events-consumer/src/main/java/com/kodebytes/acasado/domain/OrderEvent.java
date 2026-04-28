@@ -21,7 +21,7 @@ public class OrderEvent {
         @NotNull
         OrderEventType eventType;
 
-        @OneToOne(mappedBy = "libraryEvent", cascade = {CascadeType.ALL})
+        @OneToOne(mappedBy = "orderEvent", cascade = {CascadeType.ALL})
         Phone phone;
 
         @Column(nullable = false, updatable = false)

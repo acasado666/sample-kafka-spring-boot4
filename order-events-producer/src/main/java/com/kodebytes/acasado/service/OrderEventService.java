@@ -42,7 +42,7 @@ public class OrderEventService {
      */
     public CompletableFuture<OrderEvent> updateOrderEvent(OrderEvent orderEvent) {
 
-        log.debug("Updating order event: orderEventId={}, bookId={}",
+        log.debug("Updating order event: orderEventId={}, orderId={}",
                 orderEvent.orderId(),
                 orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 

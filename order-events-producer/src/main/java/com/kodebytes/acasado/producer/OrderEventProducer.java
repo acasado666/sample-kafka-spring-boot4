@@ -18,8 +18,8 @@ import java.util.concurrent.TimeoutException;
  * Publishes {@link com.kodebytes.acasado.domain.OrderEvent} messages to a Kafka topic.
  *
  * <p>Topic is read from {@code spring.kafka.topic} in {@code application.yml}.
- * The message key is {@code libraryEventId} so that events for the same
- * library record land on the same partition (ordering guarantee).
+ * The message key is {@code orderEventId} so that events for the same
+ *  record land on the same partition (ordering guarantee).
  *
  * <p>A {@code whenComplete} callback is attached to every send for
  * success/failure logging without blocking the calling thread.
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
  * caller when a synchronous guarantee is required.
  *
  * <p><b>Serializer mode (JsonSerializer — active):</b>
- * {@code KafkaTemplate} serializes {@code LibraryEvent} automatically via Jackson's
+ * {@code KafkaTemplate} serializes {@code Event} automatically via Jackson's
  * {@code JsonSerializer}. To switch to {@code StringSerializer}, see the commented
  * code in this class and toggle {@code application.yml}.
  */
@@ -51,7 +51,7 @@ public class OrderEventProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
     // StringSerializer mode (switch): replace constructor above with:
-    // public LibraryEventProducer(KafkaTemplate<Long, String> kafkaTemplate, ObjectMapper objectMapper) {
+    // public EventProducer(KafkaTemplate<Long, String> kafkaTemplate, ObjectMapper objectMapper) {
     //     this.kafkaTemplate = kafkaTemplate;
     //     this.objectMapper  = objectMapper;
     // }
@@ -100,14 +100,14 @@ public class OrderEventProducer {
      * thread until the broker acknowledgement is received (or a timeout/error occurs).
      * Use this when you need a guaranteed delivery confirmation before continuing.
      *
-     * @param orderEvent the event to publish; its {@code libraryEventId} is used as the message key
+     * @param orderEvent the event to publish; its {@code EventId} is used as the message key
      * @return the {@link SendResult} containing broker metadata for the published record
      * @throws OrderEventException if the send fails, times out, or the thread is interrupted
      */
     public SendResult<Long, OrderEvent> sendOrderEventSynchronous(OrderEvent orderEvent) {
         Long key = orderEvent.orderId();
 
-        log.info("Sending LibraryEvent synchronously to topic={}, key={}, eventType={}",
+        log.info("Sending Event synchronously to topic={}, key={}, eventType={}",
                 topic, key, orderEvent.eventType());
 
         try {
@@ -120,7 +120,7 @@ public class OrderEventProducer {
 
             return result;
         } catch (ExecutionException ex) {
-            log.error("Failed to publish LibraryEvent synchronously | topic={}, key={}, error={}",
+            log.error("Failed to publish Event synchronously | topic={}, key={}, error={}",
                     topic, key, ex.getMessage(), ex);
             throw new OrderEventException("Failed to publish OrderEvent synchronously", ex);
         } catch (InterruptedException ex) {

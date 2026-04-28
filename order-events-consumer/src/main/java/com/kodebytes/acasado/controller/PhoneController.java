@@ -26,39 +26,39 @@ public class PhoneController {
 
     @GetMapping
     public ResponseEntity<List<PhoneResponseDto>> getAllPhones() {
-        log.info("GET /v1/books");
+        log.info("GET /api/phones");
         List<PhoneResponseDto> books = phoneService.findAll();
         return ResponseEntity.ok(books);
     }
 
-    @GetMapping("/{bookId}")
-    public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long bookId) {
-        log.info("GET /v1/books/{}", bookId);
-        return phoneService.findById(bookId)
+    @GetMapping("/{phoneId}")
+    public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long phoneId) {
+        log.info("GET /api/phones/{}", phoneId);
+        return phoneService.findById(phoneId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<PhoneResponseDto> createPhone(@RequestBody @Valid PhoneDto phoneDto) {
-        log.info("POST /v1/books - {}", phoneDto);
+        log.info("POST /api/phones - {}", phoneDto);
         PhoneResponseDto created = phoneService.create(phoneDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/{bookId}")
-    public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Long bookId,
-                                                      @RequestBody @Valid PhoneDto bookDto) {
-        log.info("PUT /v1/books/{} - {}", bookId, bookDto);
-        return phoneService.update(bookId, bookDto)
+    @PutMapping("/{phoneId}")
+    public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Long phoneId,
+                                                        @RequestBody @Valid PhoneDto phoneDto) {
+        log.info("PUT /api/phones - {} - {}", phoneId, phoneDto);
+        return phoneService.update(phoneId, phoneDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{bookId}")
-    public ResponseEntity<Void> deletePhone(@PathVariable Long bookId) {
-        log.info("DELETE /v1/books/{}", bookId);
-        if (phoneService.delete(bookId)) {
+    @DeleteMapping("/{phoneId}")
+    public ResponseEntity<Void> deletePhone(@PathVariable Long phoneId) {
+        log.info("DELETE /v1/books/{}", phoneId);
+        if (phoneService.delete(phoneId)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

@@ -48,11 +48,11 @@ public class OrderEventService {
             throw new IllegalArgumentException("Order Event Id is missing");
         }
 
-        Optional<OrderEvent> libraryEventOptional = orderEventRepository.findById(orderEventDto.orderId());
-        if (libraryEventOptional.isEmpty()) {
-            throw new IllegalArgumentException("Not a valid library Event");
+        Optional<OrderEvent> orderEventOptional = orderEventRepository.findById(orderEventDto.orderId());
+        if (orderEventOptional.isEmpty()) {
+            throw new IllegalArgumentException("Not a valid order Event");
         }
-        log.info("Validation is successful for the library Event : {}", libraryEventOptional.get());
+        log.info("Validation is successful for the order Event : {}", orderEventOptional.get());
     }
 
     private void save(OrderEventDto orderEventDto) {
@@ -85,9 +85,9 @@ public class OrderEventService {
                 .toList();
     }
 
-    public Optional<OrderEventResponseDto> findById(Long libraryEventId) {
-        log.info("Fetching order event with id: {}", libraryEventId);
-        return orderEventRepository.findById(libraryEventId)
+    public Optional<OrderEventResponseDto> findById(Long orderEventId) {
+        log.info("Fetching order event with id: {}", orderEventId);
+        return orderEventRepository.findById(orderEventId)
                 .map(OrderEventMapper::toOrderEventResponseDto);
     }
 }

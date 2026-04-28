@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI libraryEventsOpenAPI() {
+    public OpenAPI orderEventsOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("Order Events Producer API")
