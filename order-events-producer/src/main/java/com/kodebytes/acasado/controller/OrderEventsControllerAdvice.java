@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,7 +72,18 @@ public class OrderEventsControllerAdvice {
     }
 
     /**
-     * Uniform error response returned for every error case.
+     * Handles requests for static resources that do not exist (e.g. {@code /favicon.ico}).
+     * Returns a plain 404 without logging an ERROR, so browser-initiated requests do not
+     * pollute the application error log.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) {
+        log.debug("Static resource not found: {}", ex.getMessage());
+        return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Uniform error response envelope returned for every error case.
      */
     public record ErrorResponse(List<String> errors) {}
 }

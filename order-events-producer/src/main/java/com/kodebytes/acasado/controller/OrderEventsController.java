@@ -1,5 +1,6 @@
 package com.kodebytes.acasado.controller;
 
+import com.kodebytes.acasado.config.AppConstants;
 import com.kodebytes.acasado.controller.OrderEventsControllerAdvice.ErrorResponse;
 import com.kodebytes.acasado.domain.OrderEvent;
 import com.kodebytes.acasado.domain.OrderEventType;
@@ -13,7 +14,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/api/orderevent")
+@RequestMapping(AppConstants.API_BASE_PATH)
+
 public class OrderEventsController {
 
     private final OrderEventService orderEventService;
