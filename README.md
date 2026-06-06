@@ -15,7 +15,7 @@ This service enables clients to emit order event changes (ADD, UPDATE, CANCEL) t
 
 ### Prerequisites
 - Java 25+
-- Docker & Docker Compose (for local Kafka broker)
+- Docker & Docker Compose (for local Kafka broker) confluentinc/cp-kafka:8.1.3
 - Maven
 
 ### Setup & Run
