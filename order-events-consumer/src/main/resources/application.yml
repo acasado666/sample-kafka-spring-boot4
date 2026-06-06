@@ -1,48 +1,96 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
     name: order-events-consumer
     datasource:
-      url: jdbc:h2:mem:testdb
-      driverClassName: org.h2.Driver
-      username: sa
-      password: ''
-    h2:
-      console:
-        enabled: true
+      url: jdbc:postgresql://${SPRING_DATASOURCE_URL:localhost}:${SPRING_DATASOURCE_PORT:5432}/${SPRING_DATASOURCE_DB:mydatabase}
+      username: ${SPRING_DATASOURCE_USERNAME:myuser}
+      password: ${SPRING_DATASOURCE_PASSWORD:secret}
+      driver-class-name: org.postgresql.Driver
     jpa:
-      database-platform: org.hibernate.dialect.H2Dialect
       hibernate:
-        ddl-auto: update
-      show-sql: true
+        ddl-auto: none
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+    flyway:
+      enabled: true
+      locations: classpath:db/migration
+#    datasource:
+#      url: jdbc:h2:mem:testdb
+#      driverClassName: org.h2.Driver
+#      username: sa
+#      password: ''
+#    h2:
+#      console:
+#        enabled: true
+#    jpa:
+#      database-platform: org.hibernate.dialect.H2Dialect
+#      hibernate:
+#        ddl-auto: update
+#      show-sql: true
 
   kafka:
     consumer:
-      bootstrap-servers: localhost:9092
-      group-id: order-events-listener-group
-      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      auto-offset-reset: latest
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:order-events-listener-group}
+#      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      auto-offset-reset: latest
       properties:
-        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.IntegerDeserializer
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.trusted.packages: com.learnkafka.dto,com.learnkafka.domain
-        spring.json.value.default.type: com.learnkafka.dto.OrderEventDto
-        spring.json.type.mapping: com.learnjava.domain.OrderEvent:com.learnkafka.dto.OrderEventDto
-
-retry:
-  scheduler:
-    fixed-rate: 10000   # ms — how often to retry OPEN failure records
+#        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.IntegerDeserializer
+#        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+#        spring.json.trusted.packages: com.kodebytes.acasado.dto,com.learnkafka.domain
+#        spring.json.value.default.type: com.kodebytes.acasado.dto.OrderEventDto
+#        spring.json.type.mapping: com.kodebytes.acasado.domain.OrderEvent:com.kodebytes.acasado.dto.OrderEventDto
+        spring.json.trusted.packages: com.kodebytes.acasado.domain,com.kodebytes.acasado.domain
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.kodebytes.acasado.domain.LibraryEventDTO
+        isolation.level: read_committed
+        auto-offset-reset: latest
+    producer:
+      producer:
+        bootstrap-servers: ${SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS:${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}}
+        key-serializer: org.apache.kafka.common.serialization.LongSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true               # enables /actuator/health/liveness and /actuator/health/readiness
+        add-additional-paths: true  # also exposes /livez and /readyz at the root
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, kafkaReadiness   # liveness fails when Kafka is unreachable (e.g. due to network issues or broker downtime)
+        readiness:
+          include: readinessState,kafkaReadiness
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+#retry:
+#  scheduler:
+#    fixed-rate: 10000   # ms — how often to retry OPEN failure records
 
 app:
   kafka:
     recovery:
-      mode: failure-table # options: failure-table | dlt | both
+      mode: both # options: failure-table | dlt | both | log_skip
 
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

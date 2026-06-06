@@ -1,0 +1,9 @@
+spring:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:prod-broker1:9092,prod-broker2:9092,prod-broker3:9092}
+    topic: order-events
+    producer:
+      acks: all
+      retries: 20
+      properties:
+        retry.backoff.ms: 3000
