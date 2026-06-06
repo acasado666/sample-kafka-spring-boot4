@@ -32,7 +32,7 @@ public class PhoneController {
     }
 
     @GetMapping("/{phoneId}")
-    public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long phoneId) {
+    public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Integer phoneId) {
         log.info("GET /api/phones/{}", phoneId);
         return phoneService.findById(phoneId)
                 .map(ResponseEntity::ok)
@@ -47,7 +47,7 @@ public class PhoneController {
     }
 
     @PutMapping("/{phoneId}")
-    public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Long phoneId,
+    public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Integer phoneId,
                                                         @RequestBody @Valid PhoneDto phoneDto) {
         log.info("PUT /api/phones - {} - {}", phoneId, phoneDto);
         return phoneService.update(phoneId, phoneDto)
@@ -56,7 +56,7 @@ public class PhoneController {
     }
 
     @DeleteMapping("/{phoneId}")
-    public ResponseEntity<Void> deletePhone(@PathVariable Long phoneId) {
+    public ResponseEntity<Void> deletePhone(@PathVariable Integer phoneId) {
         log.info("DELETE /v1/books/{}", phoneId);
         if (phoneService.delete(phoneId)) {
             return ResponseEntity.noContent().build();

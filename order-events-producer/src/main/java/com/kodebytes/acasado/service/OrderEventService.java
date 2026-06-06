@@ -1,7 +1,7 @@
 package com.kodebytes.acasado.service;
 
 import com.kodebytes.acasado.domain.OrderEvent;
-import com.kodebytes.acasado.exception.OrderEventException;
+import com.kodebytes.acasado.exception.OrderEventPublishException;
 import com.kodebytes.acasado.producer.OrderEventProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class OrderEventService {
     }
 
     /**
-     * Publishes a new order event to Kafka asynchronously.
+     * Publishes a new transaction order event to Kafka asynchronously.
      */
     public CompletableFuture<OrderEvent> createOrderEvent(OrderEvent orderEvent) {
 
@@ -29,16 +29,18 @@ public class OrderEventService {
                 orderEvent.orderId(),
                 orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
-        return orderEventProducer.sendOrderEvent(orderEvent)
+        return orderEventProducer
+//                .sendOrderEvent(orderEvent)
+                .sendOrderEventsInSingleTransactionAsync(orderEvent)
                 .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
-                    throw new OrderEventException(
+                    throw new OrderEventPublishException(
                             "Failed to publish order event to Kafka", ex.getCause());
                 });
     }
 
     /**
-     * Publishes an updated order event to Kafka asynchronously.
+     * Publishes a new transaction updated order event to Kafka asynchronously.
      */
     public CompletableFuture<OrderEvent> updateOrderEvent(OrderEvent orderEvent) {
 
@@ -46,10 +48,12 @@ public class OrderEventService {
                 orderEvent.orderId(),
                 orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
-        return orderEventProducer.sendOrderEvent(orderEvent)
+        return orderEventProducer
+//                .sendOrderEvent(orderEvent)
+                .sendOrderEventTransactional(orderEvent)
                 .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
-                    throw new OrderEventException(
+                    throw new OrderEventPublishException(
                             "Failed to publish order event to Kafka", ex.getCause());
                 });
     }

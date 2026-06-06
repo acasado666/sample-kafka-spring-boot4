@@ -33,7 +33,7 @@ public class OrderEventController {
 
     @GetMapping("/{orderEventId}")
     public ResponseEntity<OrderEventResponseDto> getOrderEventById(
-            @PathVariable Long orderEventId) {
+            @PathVariable Integer orderEventId) {
         log.info("GET /api/order-events/{}", orderEventId);
         return orderEventService.findById(orderEventId)
                 .map(ResponseEntity::ok)

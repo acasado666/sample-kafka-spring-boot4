@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record PhoneDto(
         @NotNull(message = "phoneId is required")
-        Long phoneId,
+        Integer phoneId,
 
         @NotBlank(message = "phoneName is required")
         String phoneName,
