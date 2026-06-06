@@ -13,7 +13,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Order Events Producer API")
-                        .version("v1")
+                        .version("v2")
                         .description("REST API for publishing order events to Kafka."));
     }
 }
