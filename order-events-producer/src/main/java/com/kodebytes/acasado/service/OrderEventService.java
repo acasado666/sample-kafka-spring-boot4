@@ -30,8 +30,8 @@ public class OrderEventService {
                 orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
         return orderEventProducer
-//                .sendOrderEvent(orderEvent)
-                .sendOrderEventsInSingleTransactionAsync(orderEvent)
+                .sendOrderEvent(orderEvent)
+//                .sendOrderEventsInSingleTransactionAsync(orderEvent)
                 .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
                     throw new OrderEventPublishException(

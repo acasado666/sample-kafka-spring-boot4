@@ -12,7 +12,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,13 +36,10 @@ public class OrderEventService {
         this.validator = validator;
     }
 
-    @Transactional
     public void processEvent(ConsumerRecord<Integer, OrderEventDto> consumerRecord) {
         OrderEventDto orderEventDto = consumerRecord.value();
         log.info("OrderEventDto : {}", orderEventDto);
-
         try {
-
             validateDto(orderEventDto);
             validateConditionalRules(orderEventDto);
 

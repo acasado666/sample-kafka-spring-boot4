@@ -26,6 +26,7 @@ spring:
 #    h2:
 #      console:
 #        enabled: true
+#        path: /h2-console
 #    jpa:
 #      database-platform: org.hibernate.dialect.H2Dialect
 #      hibernate:
@@ -38,6 +39,7 @@ spring:
       group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:order-events-listener-group}
 #      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
 #      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+#      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 #      auto-offset-reset: latest
@@ -47,13 +49,12 @@ spring:
 #        spring.json.trusted.packages: com.kodebytes.acasado.dto,com.learnkafka.domain
 #        spring.json.value.default.type: com.kodebytes.acasado.dto.OrderEventDto
 #        spring.json.type.mapping: com.kodebytes.acasado.domain.OrderEvent:com.kodebytes.acasado.dto.OrderEventDto
-        spring.json.trusted.packages: com.kodebytes.acasado.domain,com.kodebytes.acasado.domain
+        spring.json.trusted.packages: com.kodebytes.acasado.domain
         spring.json.use.type.headers: false
-        spring.json.value.default.type: com.kodebytes.acasado.domain.LibraryEventDTO
+        spring.json.value.default.type: com.kodebytes.acasado.domain.OrderEventDto
         isolation.level: read_committed
         auto-offset-reset: latest
     producer:
-      producer:
         bootstrap-servers: ${SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS:${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}}
         key-serializer: org.apache.kafka.common.serialization.LongSerializer
         value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

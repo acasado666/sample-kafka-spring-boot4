@@ -28,14 +28,11 @@ import java.io.StringWriter;
 public class OrderEventsConsumerConfig {
 
     private static final Logger log = LoggerFactory.getLogger(OrderEventsConsumerConfig.class);
-    private static final String DLT_TOPIC = "library-events.DLT";
+    private static final String DLT_TOPIC = "order-events.DLT";
+    private static final String TOPIC = "order-events";
 
     @Value("${app.kafka.recovery.mode:failure-table}")
     private String recoveryMode;
-
-//    private final FailureRecordService failureRecordService;
-//    private final String recoveryMode;
-//    private final String bootstrapServers;
 
     @Bean
     ObjectMapper objectMapper() {
@@ -59,11 +56,9 @@ public class OrderEventsConsumerConfig {
 
         var factory = new ConcurrentKafkaListenerContainerFactory<Integer, OrderEventDto>();
         factory.setConsumerFactory(consumerFactory);
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.setCommonErrorHandler(errorHandler);
         // factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // Default ContainerProperties.AckMode.BATCH
         // factory.setConcurrency(3);  // ← 3 consumer threads
-        factory.setCommonErrorHandler(errorHandler);
-
         return factory;
     }
 

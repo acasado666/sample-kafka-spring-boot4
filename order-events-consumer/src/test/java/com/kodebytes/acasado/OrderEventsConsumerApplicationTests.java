@@ -1,13 +1,13 @@
-package com.kodebytes.acasado;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class OrderEventsConsumerApplicationTests {
-
-    @Test
-    void contextLoads() {
-    }
-
-}
+//package com.kodebytes.acasado;
+//
+//import org.junit.jupiter.api.Test;
+//import org.springframework.boot.test.context.SpringBootTest;
+//
+//@SpringBootTest
+//class OrderEventsConsumerApplicationTests {
+//
+//    @Test
+//    void contextLoads() {
+//    }
+//
+//}

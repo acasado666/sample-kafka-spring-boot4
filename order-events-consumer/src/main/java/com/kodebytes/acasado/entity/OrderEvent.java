@@ -15,15 +15,11 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
 @Entity
-@Getter
-@Setter
 @Table(name = "order_event")
 public class OrderEvent {
 

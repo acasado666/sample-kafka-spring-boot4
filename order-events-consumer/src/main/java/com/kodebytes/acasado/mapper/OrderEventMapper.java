@@ -92,7 +92,9 @@ public class OrderEventMapper {
     }
 
     private void validatePhone(OrderEventDto dto) {
-        throw new IllegalArgumentException("phone is required");
+        if (dto.phone() == null) {
+            throw new IllegalArgumentException("phone is required");
+        }
     }
 
     private Integer toPhoneId(Long id) {
