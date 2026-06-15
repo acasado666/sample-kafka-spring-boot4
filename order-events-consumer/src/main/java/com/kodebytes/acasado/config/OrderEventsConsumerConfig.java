@@ -31,7 +31,9 @@ public class OrderEventsConsumerConfig {
     private static final String DLT_TOPIC = "order-events.DLT";
     private static final String TOPIC = "order-events";
 
-    @Value("${app.kafka.recovery.mode:failure-table}")
+//    @Value("${app.kafka.recovery.mode}")
+//    @Value("${app.kafka.recovery.mode:log}")
+    @Value("${app.kafka.recovery.mode:both}")
     private String recoveryMode;
 
     @Bean

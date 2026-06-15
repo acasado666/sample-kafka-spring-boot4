@@ -48,7 +48,8 @@ public class PhoneService {
         Phone phone = orderEventMapper.toPhoneEntity(phoneDto);
         Phone savedPhone = phoneRepository.save(phone);
         log.info("Successfully created phone: {}", savedPhone);
-        return orderEventMapper.toPhoneResponseDto(savedPhone);
+        PhoneResponseDto phoneResponseDto = orderEventMapper.toPhoneResponseDto(savedPhone);
+        return phoneResponseDto;
     }
 
     @Transactional
