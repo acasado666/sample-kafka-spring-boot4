@@ -1,46 +1,58 @@
 package com.kodebytes.acasado.config;
 
-import com.kodebytes.acasado.domain.OrderEventDto;
+import com.kodebytes.acasado.domain.OrderEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kodebytes.acasado.entity.OrderEventFailure;
-import com.kodebytes.acasado.repository.OrderEventFailureRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.*;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 
 @Configuration
 @EnableKafka
 public class OrderEventsConsumerConfig {
 
     private static final Logger log = LoggerFactory.getLogger(OrderEventsConsumerConfig.class);
-    private static final String DLT_TOPIC = "order-events.DLT";
+//    private static final String DLT_TOPIC = "order-events.DLT";
     private static final String TOPIC = "order-events";
+    @Value("${topics.retry:order-events.RETRY}")
+    private String RETRY_TOPIC;
 
+    @Value("${topics.dlt:order-events.DLT}")
+    private String DLT_TOPIC;
 //    @Value("${app.kafka.recovery.mode}")
 //    @Value("${app.kafka.recovery.mode:log}")
-    @Value("${app.kafka.recovery.mode:both}")
-    private String recoveryMode;
+//    @Value("${app.kafka.recovery.mode:both}")
+//    private String recoveryMode;
+
+    @Autowired
+    KafkaTemplate kafkaTemplate;
 
     @Bean
     ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
+    private final KafkaProperties properties;
 
+    public OrderEventsConsumerConfig(KafkaProperties properties) {
+        this.properties = properties;
+    }
 //    public OrderEventsConsumerConfig(
 //            FailureRecordService failureRecordService,
 //            @Value("${app.kafka.recovery.mode:failure-table}") String recoveryMode,
@@ -52,11 +64,11 @@ public class OrderEventsConsumerConfig {
 
     // ── Container Factory ────────────────────────────────────────────────────
     @Bean
-    KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<Integer, OrderEventDto>> kafkaListenerContainerFactory(
-            ConsumerFactory<Integer, OrderEventDto> consumerFactory,
+    ConcurrentKafkaListenerContainerFactory<Integer, OrderEvent> kafkaListenerContainerFactory(
+            ConsumerFactory<Integer, OrderEvent> consumerFactory,
             DefaultErrorHandler errorHandler) {
 
-        var factory = new ConcurrentKafkaListenerContainerFactory<Integer, OrderEventDto>();
+        var factory = new ConcurrentKafkaListenerContainerFactory<Integer, OrderEvent>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(errorHandler);
         // factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // Default ContainerProperties.AckMode.BATCH
@@ -64,111 +76,155 @@ public class OrderEventsConsumerConfig {
         return factory;
     }
 
-    @Bean
-    DefaultErrorHandler defaultErrorHandler(KafkaTemplate<Integer, Object> kafkaTemplate,
-                                            OrderEventFailureRepository orderEventFailureRepository,
-                                            ObjectMapper objectMapper) {
-        var exponentialBackOff = new ExponentialBackOffWithMaxRetries(2);
-        exponentialBackOff.setInitialInterval(1000L);
-        exponentialBackOff.setMultiplier(2.0);
-        exponentialBackOff.setMaxInterval(4000L);
+    public DeadLetterPublishingRecoverer publishingRecoverer() {
 
-        String mode = recoveryMode == null ? "" : recoveryMode.trim().toLowerCase();
-        DefaultErrorHandler errorHandler = switch (mode) {
-            case "dlt" -> {
-                var recoverer = new DeadLetterPublishingRecoverer(
-                        kafkaTemplate,
-                        (record, exception) -> resolveDltPartition(record, kafkaTemplate)
-                );
-                log.info("Kafka recovery mode is '{}'; failed records will be published to topic '{}'.", recoveryMode, DLT_TOPIC);
-                yield new DefaultErrorHandler(recoverer, exponentialBackOff);
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate
+                , (r, e) -> {
+            log.error("Exception in publishingRecoverer : {} ", e.getMessage(), e);
+            if (e.getCause() instanceof RecoverableDataAccessException) {
+                return new TopicPartition(RETRY_TOPIC, r.partition());
+            } else {
+                return new TopicPartition(DLT_TOPIC, r.partition());
             }
-            case "failure-table" -> {
-                ConsumerRecordRecoverer failureTableRecoverer = (record, exception) -> {
-                    var failure = new OrderEventFailure();
-                    failure.setTopic(record.topic());
-                    failure.setPartitionId(record.partition());
-                    failure.setOffsetValue(record.offset());
-                    failure.setRecordKey(record.key() != null ? record.key().toString() : null);
-                    failure.setPayload(toPayload(record, objectMapper));
-                    failure.setExceptionClass(exception.getClass().getName());
-                    failure.setExceptionMessage(exception.getMessage());
-                    failure.setStackTrace(toStackTrace(exception));
-                    orderEventFailureRepository.save(failure);
-                    log.error("Recovery: persisted failed record to table. topic={}, partition={}, offset={}, exceptionType={}",
-                            record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), exception);
-                };
-                log.info("Kafka recovery mode is '{}'; failed records will be persisted to the failure table.", recoveryMode);
-                yield new DefaultErrorHandler(failureTableRecoverer, exponentialBackOff);
-            }
-            case "both" -> {
-                var dltRecoverer = new DeadLetterPublishingRecoverer(
-                        kafkaTemplate,
-                        (record, exception) -> resolveDltPartition(record, kafkaTemplate)
-                );
-                ConsumerRecordRecoverer bothRecoverer = (record, exception) -> {
-                    // 1. Publish to DLT
-                    try {
-                        dltRecoverer.accept(record, exception);
-                    } catch (Exception e) {
-                        log.error("Failed to publish to DLT for record. topic={}, partition={}, offset={}, exceptionType={}. Exception: {}",
-                                record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), e.getMessage(), e);
-                    }
-
-                    // 2. Persist to failure table
-                    var failure = new OrderEventFailure();
-                    failure.setTopic(record.topic());
-                    failure.setPartitionId(record.partition());
-                    failure.setOffsetValue(record.offset());
-                    failure.setRecordKey(record.key() != null ? record.key().toString() : null);
-                    failure.setPayload(toPayload(record, objectMapper));
-                    failure.setExceptionClass(exception.getClass().getName());
-                    failure.setExceptionMessage(exception.getMessage());
-                    failure.setStackTrace(toStackTrace(exception));
-                    orderEventFailureRepository.save(failure);
-                    log.error("Recovery (both): published to DLT '{}' and persisted to failure table. topic={}, partition={}, offset={}, exceptionType={}",
-                            DLT_TOPIC, record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), exception);
-                };
-                log.info("Kafka recovery mode is '{}'; failed records will be published to DLT '{}' AND persisted to the failure table.", recoveryMode, DLT_TOPIC);
-                yield new DefaultErrorHandler(bothRecoverer, exponentialBackOff);
-            }
-            case "log_skip" -> {
-                ConsumerRecordRecoverer logAndSkip = (record, exception) -> {
-                    log.error("Recovery: skipping failed record. Topic={}, Partition={}, Offset={}, Exception={}",
-                            record.topic(), record.partition(), record.offset(), exception.getMessage(), exception);
-                };
-                yield new DefaultErrorHandler(logAndSkip, exponentialBackOff);
-            }
-            default -> {
-                log.info("Kafka recovery mode is '{}'; DLT publish is disabled.", recoveryMode);
-                yield new DefaultErrorHandler(exponentialBackOff);
-            }
-        };
-
-        RetryListener retryListener = new RetryListener() {
-            @Override
-            public void failedDelivery(ConsumerRecord<?, ?> record,
-                                       Exception ex,
-                                       int deliveryAttempt) {
-                var message = String.format(
-                        "Retry attempt %d failed for topic=%s partition=%d offset=%d: %s",
-                        deliveryAttempt,
-                        record.topic(),
-                        record.partition(),
-                        record.offset(),
-                        ex.getMessage());
-                log.warn(message, ex);
-            }
-        };
-        errorHandler.addNotRetryableExceptions(
-                IllegalArgumentException.class,        // bad payload — will never succeed
-                NullPointerException.class,            // programming error
-                DataIntegrityViolationException.class  // duplicate key — will always fail
+        }
         );
-        errorHandler.setRetryListeners(retryListener);
 
-        return errorHandler;
+        return recoverer;
+
     }
+    @Bean
+    public DefaultErrorHandler defaultErrorHandler(KafkaTemplate<Integer, Object> kafkaTemplate) {
+
+        var exceptiopnToIgnorelist = List.of(
+                IllegalArgumentException.class
+        );
+        var fixedBackOff = new FixedBackOff(1000L, 2L);
+
+        ExponentialBackOffWithMaxRetries expBackOff = new ExponentialBackOffWithMaxRetries(2);
+        expBackOff.setInitialInterval(1_000L);
+        expBackOff.setMultiplier(2.0);
+        expBackOff.setMaxInterval(2_000L);
+
+        var defaultErrorHandler = new DefaultErrorHandler(
+                publishingRecoverer(),
+                // consumerRecordRecoverer,
+                fixedBackOff
+                // expBackOff
+        );
+
+        exceptiopnToIgnorelist.forEach(defaultErrorHandler::addNotRetryableExceptions);
+        defaultErrorHandler.setRetryListeners(
+                (record, ex, deliveryAttempt) ->
+                        log.info("Failed Record in Retry Listener  exception : {} , deliveryAttempt : {} ", ex.getMessage(), deliveryAttempt)
+        );
+
+        return defaultErrorHandler;
+    }
+//    @Bean
+//    DefaultErrorHandler defaultErrorHandler(KafkaTemplate<Integer, Object> kafkaTemplate,
+//                                            OrderEventFailureRepository orderEventFailureRepository,
+//                                            ObjectMapper objectMapper) {
+//        var exponentialBackOff = new ExponentialBackOffWithMaxRetries(2);
+//        exponentialBackOff.setInitialInterval(1000L);
+//        exponentialBackOff.setMultiplier(2.0);
+//        exponentialBackOff.setMaxInterval(4000L);
+//
+//        String mode = recoveryMode == null ? "" : recoveryMode.trim().toLowerCase();
+//        DefaultErrorHandler errorHandler = switch (mode) {
+//            case "dlt" -> {
+//                var recoverer = new DeadLetterPublishingRecoverer(
+//                        kafkaTemplate,
+//                        (record, exception) -> resolveDltPartition(record, kafkaTemplate)
+//                );
+//                log.info("Kafka recovery mode is '{}'; failed records will be published to topic '{}'.", recoveryMode, DLT_TOPIC);
+//                yield new DefaultErrorHandler(recoverer, exponentialBackOff);
+//            }
+//            case "failure-table" -> {
+//                ConsumerRecordRecoverer failureTableRecoverer = (record, exception) -> {
+//                    var failure = new OrderEventFailure();
+//                    failure.setTopic(record.topic());
+//                    failure.setPartitionId(record.partition());
+//                    failure.setOffsetValue(record.offset());
+//                    failure.setRecordKey(record.key() != null ? record.key().toString() : null);
+//                    failure.setPayload(toPayload(record, objectMapper));
+//                    failure.setExceptionClass(exception.getClass().getName());
+//                    failure.setExceptionMessage(exception.getMessage());
+//                    failure.setStackTrace(toStackTrace(exception));
+//                    orderEventFailureRepository.save(failure);
+//                    log.error("Recovery: persisted failed record to table. topic={}, partition={}, offset={}, exceptionType={}",
+//                            record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), exception);
+//                };
+//                log.info("Kafka recovery mode is '{}'; failed records will be persisted to the failure table.", recoveryMode);
+//                yield new DefaultErrorHandler(failureTableRecoverer, exponentialBackOff);
+//            }
+//            case "both" -> {
+//                var dltRecoverer = new DeadLetterPublishingRecoverer(
+//                        kafkaTemplate,
+//                        (record, exception) -> resolveDltPartition(record, kafkaTemplate)
+//                );
+//                ConsumerRecordRecoverer bothRecoverer = (record, exception) -> {
+//                    // 1. Publish to DLT
+//                    try {
+//                        dltRecoverer.accept(record, exception);
+//                    } catch (Exception e) {
+//                        log.error("Failed to publish to DLT for record. topic={}, partition={}, offset={}, exceptionType={}. Exception: {}",
+//                                record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), e.getMessage(), e);
+//                    }
+//
+//                    // 2. Persist to failure table
+//                    var failure = new OrderEventFailure();
+//                    failure.setTopic(record.topic());
+//                    failure.setPartitionId(record.partition());
+//                    failure.setOffsetValue(record.offset());
+//                    failure.setRecordKey(record.key() != null ? record.key().toString() : null);
+//                    failure.setPayload(toPayload(record, objectMapper));
+//                    failure.setExceptionClass(exception.getClass().getName());
+//                    failure.setExceptionMessage(exception.getMessage());
+//                    failure.setStackTrace(toStackTrace(exception));
+//                    orderEventFailureRepository.save(failure);
+//                    log.error("Recovery (both): published to DLT '{}' and persisted to failure table. topic={}, partition={}, offset={}, exceptionType={}",
+//                            DLT_TOPIC, record.topic(), record.partition(), record.offset(), exception.getClass().getSimpleName(), exception);
+//                };
+//                log.info("Kafka recovery mode is '{}'; failed records will be published to DLT '{}' AND persisted to the failure table.", recoveryMode, DLT_TOPIC);
+//                yield new DefaultErrorHandler(bothRecoverer, exponentialBackOff);
+//            }
+//            case "log_skip" -> {
+//                ConsumerRecordRecoverer logAndSkip = (record, exception) -> {
+//                    log.error("Recovery: skipping failed record. Topic={}, Partition={}, Offset={}, Exception={}",
+//                            record.topic(), record.partition(), record.offset(), exception.getMessage(), exception);
+//                };
+//                yield new DefaultErrorHandler(logAndSkip, exponentialBackOff);
+//            }
+//            default -> {
+//                log.info("Kafka recovery mode is '{}'; DLT publish is disabled.", recoveryMode);
+//                yield new DefaultErrorHandler(exponentialBackOff);
+//            }
+//        };
+//
+//        RetryListener retryListener = new RetryListener() {
+//            @Override
+//            public void failedDelivery(ConsumerRecord<?, ?> record,
+//                                       Exception ex,
+//                                       int deliveryAttempt) {
+//                var message = String.format(
+//                        "Retry attempt %d failed for topic=%s partition=%d offset=%d: %s",
+//                        deliveryAttempt,
+//                        record.topic(),
+//                        record.partition(),
+//                        record.offset(),
+//                        ex.getMessage());
+//                log.warn(message, ex);
+//            }
+//        };
+//        errorHandler.addNotRetryableExceptions(
+//                IllegalArgumentException.class,        // bad payload — will never succeed
+//                NullPointerException.class,            // programming error
+//                DataIntegrityViolationException.class  // duplicate key — will always fail
+//        );
+//        errorHandler.setRetryListeners(retryListener);
+//
+//        return errorHandler;
+//    }
 
     private TopicPartition resolveDltPartition(ConsumerRecord<?, ?> record, KafkaTemplate<Integer, Object> kafkaTemplate) {
         try {

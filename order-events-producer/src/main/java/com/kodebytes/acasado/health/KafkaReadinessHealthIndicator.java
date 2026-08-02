@@ -18,7 +18,7 @@ public class KafkaReadinessHealthIndicator implements HealthIndicator {
     private final String bootstrapServers;
 
     public KafkaReadinessHealthIndicator(
-            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers) {
+            @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers) {
         this.bootstrapServers = bootstrapServers;
     }
 

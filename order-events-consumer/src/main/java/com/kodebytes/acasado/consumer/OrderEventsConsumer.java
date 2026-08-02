@@ -1,6 +1,6 @@
 package com.kodebytes.acasado.consumer;
 
-import com.kodebytes.acasado.domain.OrderEventDto;
+import com.kodebytes.acasado.domain.OrderEvent;
 import com.kodebytes.acasado.service.OrderEventService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -19,8 +19,11 @@ public class OrderEventsConsumer {
         this.orderEventService = orderEventService;
     }
 
-    @KafkaListener(topics = "order-events")
-    public void onMessage(ConsumerRecord<Integer, OrderEventDto> consumerRecord
+    @KafkaListener(topics = "order-events",
+            autoStartup = "${orderListener.startup:true}",
+            groupId = "order-events-listener-group"
+    )
+    public void onMessage(ConsumerRecord<Integer, OrderEvent> consumerRecord
     //, Acknowledgment acknowledgment) {
     ) {
         log.info(

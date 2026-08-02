@@ -3,8 +3,8 @@ package com.kodebytes.acasado.domain;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public record OrderEventDto(
-        Long orderEventId,
+public record OrderEvent(
+        Integer orderId,
 
         @NotNull
         OrderEventType eventType,

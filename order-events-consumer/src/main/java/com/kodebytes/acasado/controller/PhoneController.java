@@ -1,6 +1,6 @@
 package com.kodebytes.acasado.controller;
 
-import com.kodebytes.acasado.dto.PhoneDto;
+import com.kodebytes.acasado.dto.PhoneRequestDto;
 import com.kodebytes.acasado.dto.PhoneResponseDto;
 import com.kodebytes.acasado.service.PhoneService;
 import jakarta.validation.Valid;
@@ -40,17 +40,17 @@ public class PhoneController {
     }
 
     @PostMapping
-    public ResponseEntity<PhoneResponseDto> createPhone(@RequestBody @Valid PhoneDto phoneDto) {
-        log.info("POST /api/phones - {}", phoneDto);
-        PhoneResponseDto created = phoneService.create(phoneDto);
+    public ResponseEntity<PhoneResponseDto> createPhone(@RequestBody @Valid PhoneRequestDto phoneRequestDto) {
+        log.info("POST /api/phones - {}", phoneRequestDto);
+        PhoneResponseDto created = phoneService.create(phoneRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{phoneId}")
     public ResponseEntity<PhoneResponseDto> updatePhone(@PathVariable Integer phoneId,
-                                                        @RequestBody @Valid PhoneDto phoneDto) {
-        log.info("PUT /api/phones - {} - {}", phoneId, phoneDto);
-        return phoneService.update(phoneId, phoneDto)
+                                                        @RequestBody @Valid PhoneRequestDto phoneRequestDto) {
+        log.info("PUT /api/phones - {} - {}", phoneId, phoneRequestDto);
+        return phoneService.update(phoneId, phoneRequestDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -1,25 +1,23 @@
+server:
+  port: ${SERVER_PORT:8080}
+
 spring:
   application:
     name: order-events-producer
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}  # override via env var SPRING_PROFILES_ACTIVE=stage|prod
-#    active: dev          # override via -Dspring.profiles.active=stage|prod at runtime
-
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   kafka:
-    # bootstrap-servers and topic are set per-profile (see application-{dev|stage|prod}.yml)
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    topic: ${KAFKA_TOPIC:order-events}
     producer:
-      acks: all
-      retries: 10
-      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      bootstrap-servers: ${SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS:${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}}
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
+        acks: all
+        retries: 10
         retry.backoff.ms: 1000
-        enable.idempotence: true
-        max.in.flight.requests.per.connection: 5
-
-app:
-  api:
-    base-path: /api/orderevent
+#        spring.json.type.mapping: orderEvent:com.kodebytes.acasado.domain.OrderEvent
 
 management:
   endpoints:
@@ -49,3 +47,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+app:
+  api:
+    base-path: /api/orderevent
+#  kafka:
+#    recovery:
+#      mode: both # options: failure-table | dlt | both | log_skip

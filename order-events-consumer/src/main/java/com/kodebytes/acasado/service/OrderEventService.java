@@ -1,9 +1,9 @@
 package com.kodebytes.acasado.service;
 
-import com.kodebytes.acasado.domain.OrderEventDto;
+import com.kodebytes.acasado.domain.OrderEvent;
 import com.kodebytes.acasado.domain.OrderEventType;
 import com.kodebytes.acasado.dto.OrderEventResponseDto;
-import com.kodebytes.acasado.entity.OrderEvent;
+import com.kodebytes.acasado.entity.OrderEventDao;
 import com.kodebytes.acasado.mapper.OrderEventMapper;
 import com.kodebytes.acasado.repository.OrderEventRepository;
 import jakarta.validation.ConstraintViolation;
@@ -36,32 +36,34 @@ public class OrderEventService {
         this.validator = validator;
     }
 
-    public void processEvent(ConsumerRecord<Integer, OrderEventDto> consumerRecord) {
-        OrderEventDto orderEventDto = consumerRecord.value();
-        log.info("OrderEventDto : {}", orderEventDto);
+    public void processEvent(ConsumerRecord<Integer, OrderEvent> consumerRecord) {
+        OrderEvent orderEvent = consumerRecord.value();
+        var key = consumerRecord.key();
+        log.info("orderEvent : {}", orderEvent);
         try {
-            validateDto(orderEventDto);
-            validateConditionalRules(orderEventDto);
+            validateDto(orderEvent);
+            validateConditionalRules(orderEvent);
 
-            if (orderEventDto.eventType() == OrderEventType.ADD) {
-                OrderEvent orderEvent = orderEventMapper.toEntity(orderEventDto);
-                OrderEvent saved = orderEventRepository.save(orderEvent);
-                log.info("Persisted ADD event. orderEventId={}", saved.getOrderEventId());
+            if (orderEvent.eventType() == OrderEventType.ADD) {
+                OrderEventDao orderEventDao = orderEventMapper.toEntity(orderEvent);
+                OrderEventDao saved = orderEventRepository.save(orderEventDao);
+                log.info("Persisted ADD event. orderId={}", saved.getOrderId());
                 return;
             }
 
-            if (orderEventDto.eventType() == OrderEventType.UPDATE) {
-                Integer orderEventId = toOrderEventId(orderEventDto.orderEventId());
-                OrderEvent existing = orderEventRepository.findById(orderEventId)
-                        .orElseThrow(() -> new IllegalArgumentException("OrderEvent not found for update. orderEventId=" + orderEventId));
+            if (orderEvent.eventType() == OrderEventType.UPDATE) {
+                Integer orderId = consumerRecord.key();
+                OrderEventDao orderEventDao = orderEventMapper.toEntity(orderEvent);
+                OrderEventDao existing = orderEventRepository.findById(orderId)
+                        .orElseThrow(() -> new IllegalArgumentException("OrderEvent not found for update. orderId=" + key));
 
-                orderEventMapper.updateEntity(orderEventDto, existing);
-                OrderEvent updated = orderEventRepository.save(existing);
-                log.info("Persisted UPDATE event. orderEventId={}", updated.getOrderEventId());
+                orderEventMapper.updateEntity(orderEventDao, existing);
+                OrderEventDao updated = orderEventRepository.save(existing);
+                log.info("Persisted UPDATE event. orderId={}", updated.getOrderId());
                 return;
             }
 
-            throw new IllegalArgumentException("Unsupported eventType: " + orderEventDto.eventType());
+            throw new IllegalArgumentException("Unsupported eventType: " + orderEvent.eventType());
 
         } catch (Exception e) {
             log.error("Error processing order event. consumerRecord={}, error={}", consumerRecord, e.getMessage(), e);
@@ -77,39 +79,32 @@ public class OrderEventService {
                 .toList();
     }
 
-    public Optional<OrderEventResponseDto> findById(Integer orderEventId) {
-        log.info("Fetching order event with id: {}", orderEventId);
-        return orderEventRepository.findById(orderEventId)
+    public Optional<OrderEventResponseDto> findById(Integer orderId) {
+        log.info("Fetching order event with id: {}", orderId);
+        return orderEventRepository.findById(orderId)
                 .map(orderEventMapper::toOrderEventResponseDto);
     }
 
-    private void validateDto(OrderEventDto dto) {
-        Set<ConstraintViolation<OrderEventDto>> violations = validator.validate(dto);
+    private void validateDto(OrderEvent orderEvent) {
+        Set<ConstraintViolation<OrderEvent>> violations = validator.validate(orderEvent);
         if (!violations.isEmpty()) {
             String message = violations.stream()
                     .map(v -> v.getPropertyPath() + " " + v.getMessage())
                     .collect(Collectors.joining(", "));
-            log.error("Bean validation failed for order event. dto={}, errors={}", dto, message);
+            log.error("Bean validation failed for order event. orderEvent={}, errors={}", orderEvent, message);
             throw new IllegalArgumentException("Validation failed: " + message);
         }
     }
 
-    private void validateConditionalRules(OrderEventDto dto) {
-        if (dto.phone() == null) {
-            log.error("Conditional validation failed: phone is null. dto={}", dto);
+        private void validateConditionalRules(OrderEvent orderEvent) {
+        if (orderEvent.phone() == null) {
+            log.error("Conditional validation failed: phone is null. orderEvent={}", orderEvent);
             throw new IllegalArgumentException("phone is required");
         }
-        if (dto.eventType() == OrderEventType.UPDATE && dto.orderEventId() == null) {
-            log.error("Conditional validation failed: UPDATE event missing orderEventId. dto={}", dto);
-            throw new IllegalArgumentException("orderEventId is required for UPDATE event");
+        if (orderEvent.eventType() == OrderEventType.UPDATE && orderEvent.orderId() == null) {
+            log.error("Conditional validation failed: UPDATE event missing orderId. orderEvent={}", orderEvent);
+            throw new IllegalArgumentException("orderId from OrderEvent is required for UPDATE event");
         }
-    }
-
-    private Integer toOrderEventId(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("orderEventId is required");
-        }
-        return Math.toIntExact(id);
     }
 }
 

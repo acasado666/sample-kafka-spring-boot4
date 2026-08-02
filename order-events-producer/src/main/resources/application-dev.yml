@@ -1,5 +1,54 @@
+server:
+  port: ${SERVER_PORT:8080}
+
 spring:
+  application:
+    name: order-events-producer
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     topic: order-events
 
+    producer:
+      bootstrap-servers: ${SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS:${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}}
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        acks: all
+        retries: 10
+        retry.backoff.ms: 1000
+#        spring.json.type.mapping: orderEvent:com.kodebytes.acasado.domain.OrderEvent
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true               # enables /actuator/health/liveness and /actuator/health/readiness
+        add-additional-paths: true  # also exposes /livez and /readyz at the root
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, kafkaReadiness   # liveness fails when Kafka is unreachable (e.g. due to network issues or broker downtime)
+        readiness:
+          include: readinessState,kafkaReadiness
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  api:
+    base-path: /api/orderevent
+#  kafka:
+#    recovery:
+#      mode: both # options: failure-table | dlt

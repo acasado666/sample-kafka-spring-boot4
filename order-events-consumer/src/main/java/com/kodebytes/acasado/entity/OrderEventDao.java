@@ -21,12 +21,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_event")
-public class OrderEvent {
+public class OrderEventDao {
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "order_event_id")
-        private Integer orderEventId;
+        private Integer orderId;
         
         @NotNull
         @Enumerated(EnumType.STRING)
@@ -34,7 +34,7 @@ public class OrderEvent {
         OrderEventType eventType;
 
         @OneToOne(mappedBy = "orderEvent", cascade = {CascadeType.ALL})
-        Phone phone;
+        PhoneDao phone;
 
         @Column(name = "created_at", nullable = false, updatable = false)
         private LocalDateTime createdAt;
@@ -54,21 +54,21 @@ public class OrderEvent {
                 updatedAt = LocalDateTime.now();
         }
 
-        public OrderEvent() {
+        public OrderEventDao() {
         }
 
-        public OrderEvent(Integer orderEventId, OrderEventType eventType, Phone phone) {
-                this.orderEventId = orderEventId;
+        public OrderEventDao(Integer orderId, OrderEventType eventType, PhoneDao phone) {
+                this.orderId = orderId;
                 this.eventType = eventType;
                 this.phone = phone;
         }
 
-        public Integer getOrderEventId() {
-                return orderEventId;
+        public Integer getOrderId() {
+                return orderId;
         }
 
-        public void setOrderEventId(Integer orderEventId) {
-                this.orderEventId = orderEventId;
+        public void setOrderId(Integer orderId) {
+                this.orderId = orderId;
         }
 
         public OrderEventType getEventType() {
@@ -79,11 +79,11 @@ public class OrderEvent {
                 this.eventType = eventType;
         }
 
-        public Phone getPhone() {
+        public PhoneDao getPhone() {
                     return phone;
         }
 
-        public void setPhone(Phone phone) {
+        public void setPhone(PhoneDao phone) {
                 this.phone = phone;
                 if (phone != null && phone.getOrderEvent() != this) {
                         phone.setOrderEvent(this);
@@ -109,7 +109,7 @@ public class OrderEvent {
         @Override
         public String toString() {
                 return "OrderEvent{" +
-                        "orderEventId=" + orderEventId +
+                        "orderId=" + orderId +
                         ", eventType=" + eventType +
                         ", phone=" + phone +
                         ", createdAt=" + createdAt +

@@ -20,9 +20,6 @@ public class OrderEventService {
         this.orderEventProducer = orderEventProducer;
     }
 
-    /**
-     * Publishes a new transaction order event to Kafka asynchronously.
-     */
     public CompletableFuture<OrderEvent> createOrderEvent(OrderEvent orderEvent) {
 
         log.debug("Creating order event: orderEventId={}, phoneId={}",
@@ -39,9 +36,6 @@ public class OrderEventService {
                 });
     }
 
-    /**
-     * Publishes a new transaction updated order event to Kafka asynchronously.
-     */
     public CompletableFuture<OrderEvent> updateOrderEvent(OrderEvent orderEvent) {
 
         log.debug("Updating order event: orderEventId={}, orderId={}",
@@ -49,8 +43,8 @@ public class OrderEventService {
                 orderEvent.phone() != null ? orderEvent.phone().phoneId() : null);
 
         return orderEventProducer
-//                .sendOrderEvent(orderEvent)
-                .sendOrderEventTransactional(orderEvent)
+                .sendOrderEvent(orderEvent)
+//                .sendOrderEventTransactional(orderEvent)
                 .thenApply(_ -> orderEvent)
                 .exceptionally(ex -> {
                     throw new OrderEventPublishException(

@@ -1,9 +1,9 @@
 package com.kodebytes.acasado.service;
 
-import com.kodebytes.acasado.dto.PhoneDto;
+import com.kodebytes.acasado.dto.PhoneRequestDto;
 import com.kodebytes.acasado.dto.PhoneResponseDto;
-import com.kodebytes.acasado.entity.Phone;
-import com.kodebytes.acasado.entity.OrderEvent;
+import com.kodebytes.acasado.entity.PhoneDao;
+import com.kodebytes.acasado.entity.OrderEventDao;
 import com.kodebytes.acasado.mapper.OrderEventMapper;
 import com.kodebytes.acasado.repository.PhoneRepository;
 import org.slf4j.Logger;
@@ -37,32 +37,32 @@ public class PhoneService {
 
     public Optional<PhoneResponseDto> findById(Integer phoneId) {
         log.info("Fetching phone with id: {}", phoneId);
-        Optional<Phone> byId = phoneRepository.findById(phoneId);
+        Optional<PhoneDao> byId = phoneRepository.findById(phoneId);
         return phoneRepository.findById(phoneId)
                 .map(orderEventMapper::toPhoneResponseDto);
     }
 
     @Transactional
-    public PhoneResponseDto create(PhoneDto phoneDto) {
-        log.info("Creating phone: {}", phoneDto);
-        Phone phone = orderEventMapper.toPhoneEntity(phoneDto);
-        Phone savedPhone = phoneRepository.save(phone);
+    public PhoneResponseDto create(PhoneRequestDto phoneRequestDto) {
+        log.info("Creating phone: {}", phoneRequestDto);
+        PhoneDao phone = orderEventMapper.toPhoneEntity(phoneRequestDto);
+        PhoneDao savedPhone = phoneRepository.save(phone);
         log.info("Successfully created phone: {}", savedPhone);
         PhoneResponseDto phoneResponseDto = orderEventMapper.toPhoneResponseDto(savedPhone);
         return phoneResponseDto;
     }
 
     @Transactional
-    public Optional<PhoneResponseDto> update(Integer orderId, PhoneDto phoneDto) {
+    public Optional<PhoneResponseDto> update(Integer orderId, PhoneRequestDto phoneRequestDto) {
         log.info("Updating phone with id: {}", orderId);
         return phoneRepository.findById(orderId)
                 .map(existingPhone -> {
-                    existingPhone.setPhoneId(phoneDto.phoneId());
-                    existingPhone.setPhoneName(phoneDto.phoneName());
-                    existingPhone.setPhoneModel(phoneDto.phoneModel());
-                    existingPhone.setPhonePrice(phoneDto.phonePrice());
-                    existingPhone.setPhoneManufacturer(phoneDto.phoneManufacturer());
-                    Phone updatedPhone = phoneRepository.save(existingPhone);
+                    existingPhone.setPhoneId(phoneRequestDto.phoneId());
+                    existingPhone.setPhoneName(phoneRequestDto.phoneName());
+                    existingPhone.setPhoneModel(phoneRequestDto.phoneModel());
+                    existingPhone.setPhonePrice(phoneRequestDto.phonePrice());
+                    existingPhone.setPhoneManufacturer(phoneRequestDto.phoneManufacturer());
+                    PhoneDao updatedPhone = phoneRepository.save(existingPhone);
                     log.info("Successfully updated phone: {}", updatedPhone);
                     return orderEventMapper.toPhoneResponseDto(updatedPhone);
                 });
@@ -73,7 +73,7 @@ public class PhoneService {
         log.info("Deleting order with id: {}", orderId);
         return phoneRepository.findById(orderId)
                 .map(phone -> {
-                    OrderEvent orderEvent = phone.getOrderEvent();
+                    OrderEventDao orderEvent = phone.getOrderEvent();
 
                     // Break the bidirectional OneToOne reference so that
                     // OrderEvent's cascade = ALL does not re-persist the phone

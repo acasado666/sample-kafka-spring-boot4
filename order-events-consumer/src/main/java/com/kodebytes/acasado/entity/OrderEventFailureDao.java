@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_event_failure")
-public class OrderEventFailure {
+public class OrderEventFailureDao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

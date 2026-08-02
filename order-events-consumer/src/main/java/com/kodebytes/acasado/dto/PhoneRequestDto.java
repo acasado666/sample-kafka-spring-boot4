@@ -3,7 +3,7 @@ package com.kodebytes.acasado.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record PhoneDto(
+public record PhoneRequestDto(
         @NotNull(message = "phoneId is required")
         Integer phoneId,
 

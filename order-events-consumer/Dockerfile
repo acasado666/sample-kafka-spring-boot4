@@ -1,46 +1,32 @@
-FROM eclipse-temurin:25-jre
+# Stage 1: extract Spring Boot layers for optimal Docker layer caching
+FROM eclipse-temurin:25-jre AS builder
+WORKDIR /builder
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+RUN java -Djarmode=tools -jar app.jar extract --layers --launcher --destination extracted
+
+# Stage 2: minimal Alpine runtime (~70% smaller than Ubuntu JRE)
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} /app/app.jar
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
+# Layers ordered least → most frequently changed; Docker caches dependencies separately
+COPY --from=builder --chown=appuser:appgroup /builder/extracted/dependencies/ ./
+COPY --from=builder --chown=appuser:appgroup /builder/extracted/spring-boot-loader/ ./
+COPY --from=builder --chown=appuser:appgroup /builder/extracted/snapshot-dependencies/ ./
+COPY --from=builder --chown=appuser:appgroup /builder/extracted/application/ ./
+
+USER appuser
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
+# -XX:+UseContainerSupport  → JVM reads cgroup limits, not host RAM (prevents heap miscalculation)
+# -XX:MaxRAMPercentage=75.0 → heap capped at 75% of container limit; leaves room for off-heap (Kafka/Netty buffers)
+ENTRYPOINT ["java", \
+    "-XX:+UseContainerSupport", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "org.springframework.boot.loader.launch.JarLauncher"]
 
-#THEN:
-#  docker build -t order-events-consumer:v1 .
-#  docker run -p 8081:8081 order-events-consumer:v1
-
-
-#----------------------------------------------------------------------
-#FROM maven:3.9-eclipse-temurin-25 AS build
-#WORKDIR /app
-#COPY pom.xml .
-#COPY src ./src
-#RUN mvn clean package -DskipTests
-#
-#FROM eclipse-temurin:25-jre
-#WORKDIR /app
-#COPY --from=build /app/target/*.jar app.jar
-#EXPOSE 8081
-#ENTRYPOINT ["java", "-jar", "app.jar"]
-
-#----------------------------------------------------------------------
-#FROM eclipse-temurin:25-jdk AS build
-#WORKDIR /workspace
-#
-#COPY pom.xml ./
-#COPY mvnw ./
-#COPY .mvn .mvn
-#COPY src src
-#
-#RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
-#
-#FROM eclipse-temurin:25-jre
-#WORKDIR /app
-#
-#COPY --from=build /workspace/target/*.jar /app/app.jar
-#
-#EXPOSE 8081
-#ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Build & run:
+#   docker build -t order-events-consumer:v2 .
+#   docker run -p 8081:8081 order-events-consumer:v2

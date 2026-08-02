@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 public record OrderEvent(
-        Long orderId,
+        Integer orderId,
 
         @NotNull(message = "eventType is required")
         OrderEventType eventType,

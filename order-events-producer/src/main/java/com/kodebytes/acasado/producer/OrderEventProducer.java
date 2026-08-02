@@ -21,22 +21,22 @@ public class OrderEventProducer {
     private static final Logger log = LoggerFactory.getLogger(OrderEventProducer.class);
     private static final String TRANSACTION_ORDER_NAME = "transaction";
 
-    @Value("${spring.kafka.topic}")
+    @Value("${spring.kafka.topic:order-events}")
     private String topic;
 
-    private final KafkaTemplate<Long, OrderEvent> kafkaTemplate;
+    private final KafkaTemplate<Integer, OrderEvent> kafkaTemplate;
 
-    public OrderEventProducer(KafkaTemplate<Long, OrderEvent> kafkaTemplate) {
+    public OrderEventProducer(KafkaTemplate<Integer, OrderEvent> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public CompletableFuture<SendResult<Long, OrderEvent>> sendOrderEvent(OrderEvent orderEvent) {
+    // Asynchronous
+    public CompletableFuture<SendResult<Integer, OrderEvent>> sendOrderEvent(OrderEvent orderEvent) {
 
-        Long key = orderEvent.orderId();
-
+        Integer key = orderEvent.orderId();
         log.info("Sending OrderEvent to topic={}, key={}, eventStatus={}", topic, key, orderEvent.eventType());
 
-        CompletableFuture<SendResult<Long, OrderEvent>> future = kafkaTemplate.send(topic, key, orderEvent);
+        CompletableFuture<SendResult<Integer, OrderEvent>> future = kafkaTemplate.send(topic, key, orderEvent);
 
         return future.whenComplete((result, ex) -> {
             if (ex != null) {
@@ -50,14 +50,15 @@ public class OrderEventProducer {
         });
     }
 
-    public SendResult<Long, OrderEvent> sendOrderEventSynchronous(OrderEvent orderEvent) {
-        Long key = orderEvent.orderId();
+    // Synchronous
+    public SendResult<Integer, OrderEvent> sendOrderEventSynchronous(OrderEvent orderEvent) {
 
+        Integer key = orderEvent.orderId();
         log.info("Sending Event synchronously to topic={}, key={}, eventType={}",
                 topic, key, orderEvent.eventType());
 
         try {
-            SendResult<Long, OrderEvent> result = kafkaTemplate.send(topic, key, orderEvent)
+            SendResult<Integer, OrderEvent> result = kafkaTemplate.send(topic, key, orderEvent)
                     .get(3, TimeUnit.SECONDS);
 
             var metadata = result.getRecordMetadata();
@@ -79,10 +80,11 @@ public class OrderEventProducer {
         }
     }
 
+    // Transactional Asynchronous
     @Transactional
-    public CompletableFuture<SendResult<Long, OrderEvent>> sendOrderEventTransactional(OrderEvent orderEvent) {
-        Long key = orderEvent.orderId();
+    public CompletableFuture<SendResult<Integer, OrderEvent>> sendOrderEventTransactional(OrderEvent orderEvent) {
 
+        Integer key = orderEvent.orderId();
         if (isTransactionOrder(orderEvent)) {
             log.info("Transaction scenario detected for key={}; sending same event 3 times before forcing failure", key);
             for (int i = 1; i <= 3; i++) {
@@ -96,7 +98,7 @@ public class OrderEventProducer {
 
         log.info("Sending OrderEvent transactionally to topic={}, key={}, eventType={}", topic, key, orderEvent.eventType());
 
-        CompletableFuture<SendResult<Long, OrderEvent>> future = kafkaTemplate.send(topic, key, orderEvent);
+        CompletableFuture<SendResult<Integer, OrderEvent>> future = kafkaTemplate.send(topic, key, orderEvent);
 
         return future.whenComplete((result, ex) -> {
             if (ex != null) {
@@ -110,9 +112,11 @@ public class OrderEventProducer {
         });
     }
 
+    // Transactional Synchronous
     @Transactional
-    public SendResult<Long, OrderEvent> sendOrderEventSynchronousTransactional(OrderEvent orderEvent) {
-        Long key = orderEvent.orderId();
+    public SendResult<Integer, OrderEvent> sendOrderEventSynchronousTransactional(OrderEvent orderEvent) {
+
+        Integer key = orderEvent.orderId();
 
         if (isTransactionOrder(orderEvent)) {
             log.info("Transaction scenario detected for key={}; sending same event 3 times synchronously before forcing failure", key);
@@ -137,7 +141,7 @@ public class OrderEventProducer {
                 topic, key, orderEvent.eventType());
 
         try {
-            SendResult<Long, OrderEvent> result = kafkaTemplate.send(topic, key, orderEvent)
+            SendResult<Integer, OrderEvent> result = kafkaTemplate.send(topic, key, orderEvent)
                     .get(3, TimeUnit.SECONDS);
 
             var metadata = result.getRecordMetadata();
@@ -170,8 +174,9 @@ public class OrderEventProducer {
                 && TRANSACTION_ORDER_NAME.equalsIgnoreCase(orderEvent.phone().phoneName().trim());
     }
 
+    // Single Transaction Asynchronous
     public CompletableFuture<Void> sendOrderEventsInSingleTransactionAsync(OrderEvent orderEvent) {
-        Long key = orderEvent.orderId();
+        Integer key = orderEvent.orderId();
         log.info("Sending the same OrderEvent 3 times asynchronously in a single Kafka transaction | topic={}, key={}, eventType={}",
                 topic, key, orderEvent.eventType());
 

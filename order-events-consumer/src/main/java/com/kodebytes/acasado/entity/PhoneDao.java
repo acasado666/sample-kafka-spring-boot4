@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "phone")
-public class Phone {
+public class PhoneDao {
 
     @Id
     @NotNull
@@ -34,7 +34,7 @@ public class Phone {
 
     @OneToOne
     @JoinColumn(name = "order_event_id")
-    private OrderEvent orderEvent;
+    private OrderEventDao orderEvent;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -94,11 +94,11 @@ public class Phone {
         this.phonePrice = phonePrice;
     }
 
-    public OrderEvent getOrderEvent() {
+    public OrderEventDao getOrderEvent() {
         return orderEvent;
     }
 
-    public void setOrderEvent(OrderEvent orderEvent) {
+    public void setOrderEvent(OrderEventDao orderEvent) {
         this.orderEvent = orderEvent;
     }
     public LocalDateTime getCreatedAt() {
@@ -125,7 +125,7 @@ public class Phone {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Phone phone = (Phone) o;
+        PhoneDao phone = (PhoneDao) o;
         return Objects.equals(phoneId, phone.phoneId)
                 && Objects.equals(phoneName, phone.phoneName)
                 && Objects.equals(phoneModel, phone.phoneModel)
