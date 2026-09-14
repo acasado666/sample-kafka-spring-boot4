@@ -318,3 +318,8 @@ This is an educational project for learning Kafka and Spring Boot integration.
 **Last Updated**: March 2026  
 **Version**: 0.0.1-SNAPSHOT
 
+
+
+## Payment analytics milestone
+
+The repository now includes a production-oriented [Kafka Streams payment analytics service](payment-analytics-streams/README.md). It enriches versioned payment events with merchant risk, publishes fraud alerts, and maintains windowed per-account metrics with exactly-once-v2 processing. See the [architecture and operations guide](docs/PAYMENT_ANALYTICS_STREAMS.md).

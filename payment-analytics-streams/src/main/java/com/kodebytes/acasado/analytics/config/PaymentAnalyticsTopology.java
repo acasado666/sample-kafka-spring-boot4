@@ -12,8 +12,11 @@ public class PaymentAnalyticsTopology {
   JsonSerde<EnrichedPayment> es=new JsonSerde<>(EnrichedPayment.class); JsonSerde<AccountPaymentMetric> ms=new JsonSerde<>(AccountPaymentMetric.class);
   KTable<String,MerchantRisk> risks=b.table(p.merchantRisksTopic(),Consumed.with(Serdes.String(),rs));
   KStream<String,PaymentEvent> input=b.stream(p.paymentsTopic(),Consumed.with(Serdes.String(),ps))
-   .filter((k,v)->k!=null&&v!=null&&v.accountId()!=null&&v.amount()!=null);
-  KStream<String,EnrichedPayment> enriched=input.leftJoin(risks,(payment,risk)->enrich(payment,risk,rules),Joined.with(Serdes.String(),ps,rs));
+   .filter((k,v)->k!=null&&v!=null&&v.accountId()!=null&&v.merchantId()!=null&&v.amount()!=null);
+  KStream<String,EnrichedPayment> enriched=input
+   .selectKey((paymentId,payment)->payment.merchantId())
+   .leftJoin(risks,(payment,risk)->enrich(payment,risk,rules),Joined.with(Serdes.String(),ps,rs))
+   .selectKey((merchantId,payment)->payment.paymentId());
   enriched.to(p.enrichedPaymentsTopic(),Produced.with(Serdes.String(),es));
   enriched.filter((k,v)->v.fraudulent()).to(p.fraudAlertsTopic(),Produced.with(Serdes.String(),es));
   enriched.selectKey((k,v)->v.accountId()).groupByKey(Grouped.with(Serdes.String(),es))

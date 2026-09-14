@@ -1,0 +1,25 @@
+name: Payment analytics CI
+on:
+  pull_request:
+    paths:
+      - "payment-analytics-streams/**"
+      - ".github/workflows/payment-analytics-ci.yml"
+  push:
+    branches: [master]
+    paths:
+      - "payment-analytics-streams/**"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Verify
+        working-directory: payment-analytics-streams
+        run: ../mvnw -B -ntp clean verify
