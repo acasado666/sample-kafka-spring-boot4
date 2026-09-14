@@ -22,4 +22,4 @@ jobs:
           cache: maven
       - name: Verify
         working-directory: payment-analytics-streams
-        run: ../mvnw -B -ntp clean verify
+        run: bash ../mvnw -B -ntp clean verify
