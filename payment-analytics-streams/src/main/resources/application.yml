@@ -1,0 +1,39 @@
+server:
+  port: ${SERVER_PORT:8082}
+spring:
+  application:
+    name: payment-analytics-streams
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    streams:
+      application-id: ${KAFKA_STREAMS_APPLICATION_ID:payment-analytics-v1}
+      replication-factor: ${KAFKA_STREAMS_REPLICATION_FACTOR:1}
+      state-dir: ${KAFKA_STREAMS_STATE_DIR:/tmp/kafka-streams/payment-analytics}
+      properties:
+        processing.guarantee: exactly_once_v2
+        num.stream.threads: ${KAFKA_STREAMS_THREADS:2}
+        commit.interval.ms: 1000
+        topology.optimization: all
+        default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+app:
+  kafka:
+    payments-topic: ${PAYMENTS_TOPIC:payments.v1}
+    merchant-risks-topic: ${MERCHANT_RISKS_TOPIC:merchant-risks.v1}
+    enriched-payments-topic: ${ENRICHED_PAYMENTS_TOPIC:enriched-payments.v1}
+    fraud-alerts-topic: ${FRAUD_ALERTS_TOPIC:fraud-alerts.v1}
+    account-metrics-topic: ${ACCOUNT_METRICS_TOPIC:account-payment-metrics.v1}
+    metrics-window: ${METRICS_WINDOW:PT5M}
+    grace-period: ${METRICS_GRACE_PERIOD:PT1M}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
