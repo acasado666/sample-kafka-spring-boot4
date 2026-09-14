@@ -1,0 +1,4 @@
+target/*
+!target/payment-analytics-streams-0.1.0-SNAPSHOT.jar
+.git
+.idea
